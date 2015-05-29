@@ -71,7 +71,7 @@ var OpenSSH_6_6p1 = ClientImplementation{
 	maxDHGroupSize:       8072,
 }
 
-var dropbear_0_46 = ClientImplementation{
+var Dropbear_0_46 = ClientImplementation{
 	kexAlgorithms: []string{
 		KEX_DH_GROUP1_SHA1,
 	},
@@ -90,4 +90,5 @@ var dropbear_0_46 = ClientImplementation{
 
 func init() {
 	clientImplementations["OpenSSH_6.6p1"] = &OpenSSH_6_6p1
+	clientImplementations["dropbear_0_46"] = &Dropbear_0_46
 }

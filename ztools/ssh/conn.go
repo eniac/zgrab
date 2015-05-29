@@ -137,13 +137,13 @@ ProtocolLoop:
 	}
 	if c.dropbearCompatMode {
 		if len(c.config.HostKeyAlgorithms) == 0 {
-			ckxi.KexAlgorithms = dropbear_0_46.kexAlgorithms
+			ckxi.KexAlgorithms = Dropbear_0_46.kexAlgorithms
 		}
-		ckxi.HostKeyAlgorithms = dropbear_0_46.hostKeyAlgorithms
-		ckxi.EncryptionClientToServer = dropbear_0_46.encryptionAlgorithms
-		ckxi.EncryptionServerToClient = dropbear_0_46.encryptionAlgorithms
-		ckxi.MACClientToServer = dropbear_0_46.macAlgorithms
-		ckxi.MACClientToServer = dropbear_0_46.macAlgorithms
+		ckxi.HostKeyAlgorithms = Dropbear_0_46.hostKeyAlgorithms
+		ckxi.EncryptionClientToServer = Dropbear_0_46.encryptionAlgorithms
+		ckxi.EncryptionServerToClient = Dropbear_0_46.encryptionAlgorithms
+		ckxi.MACClientToServer = Dropbear_0_46.macAlgorithms
+		ckxi.MACClientToServer = Dropbear_0_46.macAlgorithms
 	}
 	if err = c.writePacket(ckxi); err != nil {
 		return err
