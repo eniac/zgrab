@@ -19,16 +19,17 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"strconv"
+	"time"
+
 	"github.com/zmap/zgrab/ztools/ftp"
 	"github.com/zmap/zgrab/ztools/processing"
 	"github.com/zmap/zgrab/ztools/scada/dnp3"
 	"github.com/zmap/zgrab/ztools/scada/fox"
 	"github.com/zmap/zgrab/ztools/scada/siemens"
 	"github.com/zmap/zgrab/ztools/telnet"
-	"io"
-	"net"
-	"strconv"
-	"time"
 )
 
 type GrabTarget struct {
@@ -135,6 +136,14 @@ func makeGrabber(config *Config) func(*Conn) error {
 			c.sshScan = &config.SSH
 		}
 		c.ReadEncoding = config.Encoding
+
+		if config.SSLv2 {
+			if err := c.SSLv2Handshake(); err != nil {
+				c.erroredComponent = "sslv2"
+				return err
+			}
+		}
+
 		if config.TLS {
 			if err := c.TLSHandshake(); err != nil {
 				c.erroredComponent = "tls"

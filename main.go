@@ -68,6 +68,7 @@ func init() {
 	flag.StringVar(&interfaceName, "interface", "", "Network interface to send on")
 	flag.UintVar(&portFlag, "port", 80, "Port to grab on")
 	flag.UintVar(&timeout, "timeout", 10, "Set connection timeout in seconds")
+	flag.BoolVar(&config.SSLv2, "sslv2", false, "Probe for SSLv2 support")
 	flag.BoolVar(&config.TLS, "tls", false, "Grab over TLS")
 	flag.StringVar(&tlsVersion, "tls-version", "", "Max TLS version to use (implies --tls)")
 	flag.BoolVar(&udp, "udp", false, "Grab over UDP")
@@ -132,6 +133,10 @@ func init() {
 	// Stop the lowliest idiot from using this to DoS people
 	if config.ConnectionsPerHost > 50 || config.ConnectionsPerHost < 1 {
 		zlog.Fatalf("--connections-per-host must be in the range [0,50]")
+	}
+
+	if config.SSLv2 && config.TLS {
+		zlog.Fatal("SSLv2 and TLS are mutually exclusive")
 	}
 
 	// Validate SSH related flags

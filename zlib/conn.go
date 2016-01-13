@@ -33,6 +33,7 @@ import (
 	"github.com/zmap/zgrab/ztools/ftp"
 	"github.com/zmap/zgrab/ztools/scada/bacnet"
 	"github.com/zmap/zgrab/ztools/ssh"
+	"github.com/zmap/zgrab/ztools/sslv2"
 	"github.com/zmap/zgrab/ztools/util"
 	"github.com/zmap/zgrab/ztools/x509"
 	"github.com/zmap/zgrab/ztools/ztls"
@@ -413,6 +414,11 @@ func (c *Conn) makeAndSendHTTPRequest(config *HTTPConfig) (*HTTPRequest, *HTTPRe
 	}
 
 	return encReq, encRes, nil
+}
+
+// Do an SSLv2 probe. This doesn't complete the handshake
+func (c *Conn) SSLv2Handshake() error {
+	return sslv2.Handshake(c.getUnderlyingConn())
 }
 
 // Extra method - Do a TLS Handshake and record progress

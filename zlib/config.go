@@ -97,6 +97,9 @@ type Config struct {
 	// Encoding
 	Encoding string
 
+	// SSLv2
+	SSLv2 bool
+
 	// TLS
 	TLS                 bool
 	TLSVersion          uint16
