@@ -19,8 +19,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"net"
-
-	"github.com/zmap/zgrab/ztools/zlog"
 )
 
 // Protocol message codes
@@ -31,13 +29,15 @@ const (
 
 // Version codes
 const (
-	SSL_VERSION_2 uint16 = 0x0200
+	SSL_VERSION_2 uint16 = 0x0002
 )
 
 // ErrInvalidLength is returned when a byte slice to be Unmarshaled is too
 // short, or when a single record length is greater than the max length of 32512
 // bytes.
 var ErrInvalidLength = errors.New("Invalid SSLv2 packet length")
+
+var ErrUnexpectedMessage = errors.New("Unexpected message type")
 
 // CipherKind holds a 3-byte ID for a cipher spec. It is invalid for a
 // CipherKind to be greater than 0x00FFFFFF
@@ -65,8 +65,9 @@ var defaultCiphers = []CipherKind{
 }
 
 type Header struct {
-	Length uint16
-	raw    []byte
+	Length        uint16
+	PaddingLength uint8
+	raw           []byte
 }
 
 // MarshalBinary implements the BinaryMarshaler interface
@@ -87,7 +88,17 @@ func (h *Header) UnmarshalBinary(b []byte) (err error) {
 	if len(b) < 2 {
 		return ErrInvalidLength
 	}
+	hasPadding := b[0]&0x80 == 0
+	if hasPadding && len(b) < 3 {
+		return ErrInvalidLength
+	}
 	h.Length = uint16(b[0]&0x7f)<<8 | uint16(b[1])
+	if hasPadding {
+		h.PaddingLength = b[2]
+		h.raw = b[0:3]
+	} else {
+		h.raw = b[0:2]
+	}
 	return
 }
 
@@ -107,7 +118,6 @@ func (h *ClientHello) MarshalBinary() (b []byte, err error) {
 	buf[0] = MSG_CLIENT_HELLO
 	buf = buf[1:]
 	binary.BigEndian.PutUint16(buf, h.Version)
-	zlog.Debug(buf[0:2])
 	buf = buf[2:]
 	binary.BigEndian.PutUint16(buf, uint16(len(h.Ciphers)))
 	buf = buf[2:]
@@ -121,7 +131,6 @@ func (h *ClientHello) MarshalBinary() (b []byte, err error) {
 	buf = buf[len(h.SessionID):]
 	copy(buf, h.Challenge)
 	buf = buf[len(h.Challenge):]
-	zlog.Debug(b)
 	return
 }
 
@@ -131,12 +140,14 @@ func (h *ClientHello) UnmarshalBinary(b []byte) (err error) {
 }
 
 type ServerHello struct {
-	SessionIDHit    byte
-	CertificateType byte
-	Version         uint16
-	Certificates    []byte
-	Ciphers         []byte
-	ConnectionID    []byte
+	SessionIDHit    byte   `json:"session_id_hit"`
+	CertificateType byte   `json:"certificate_type"`
+	Version         uint16 `json:"version"`
+	Certificates    []byte `json:"certificates,omitempty"`
+	Ciphers         []byte `json:"ciphers,omitempty"`
+	ConnectionID    []byte `json:"connection_id,omitempty"`
+
+	raw []byte
 }
 
 // MarshalBinary implements the BinaryMarshaler interface
@@ -185,16 +196,59 @@ func (h *ServerHello) MarshalBinary() (b []byte, err error) {
 
 // UnmarshalBinary implements the BinaryUnmarshaler interface
 func (h *ServerHello) UnmarshalBinary(b []byte) (err error) {
+	if len(b) < 11 {
+		return ErrInvalidLength
+	}
+	if b[0] != MSG_SERVER_HELLO {
+		return ErrUnexpectedMessage
+	}
+	h.SessionIDHit = b[1]
+	h.CertificateType = b[2]
+	h.Version = binary.BigEndian.Uint16(b[3:5])
+	certificateLength := int(binary.BigEndian.Uint16(b[5:7]))
+	cipherSpecsLength := int(binary.BigEndian.Uint16(b[7:9]))
+	connectionIDLength := int(binary.BigEndian.Uint16(b[9:11]))
+	variableLength := certificateLength + cipherSpecsLength + connectionIDLength
+	totalLength := 11 + variableLength
+
+	buf := b[11:]
+	if len(buf) < variableLength {
+		return ErrInvalidLength
+	}
+	h.Certificates = buf[0:certificateLength]
+	buf = buf[certificateLength:]
+	h.Ciphers = buf[0:cipherSpecsLength]
+	buf = buf[cipherSpecsLength:]
+	h.ConnectionID = buf[0:connectionIDLength]
+	h.raw = b[0:totalLength]
 	return
 }
 
 func readRecord(c net.Conn) (b []byte, err error) {
-	header := make([]byte, 2)
-	_, err = c.Read(header)
+	headerBytes := make([]byte, 2)
+	_, err = c.Read(headerBytes)
 	if err != nil {
-		zlog.Debug(err.Error())
+		return
 	}
-	zlog.Debug(header)
+	// Check to see if it's a 3-byte header
+	if headerBytes[0]&0x80 == 0 {
+		headerBytes = append(headerBytes, byte(0))
+		if _, err = c.Read(headerBytes[2:]); err != nil {
+			return
+		}
+	}
+	header := new(Header)
+	if err = header.UnmarshalBinary(headerBytes); err != nil {
+		return
+	}
+	body := make([]byte, header.Length)
+	var n int
+	n, err = c.Read(body)
+	if err != nil {
+		b = body[0:n]
+		return
+	}
+	b = body
 	return
 }
 
@@ -202,7 +256,6 @@ func writeRecord(c net.Conn, b []byte) (err error) {
 	h := Header{
 		Length: uint16(len(b)),
 	}
-	zlog.Debug(h.Length)
 	var headerBytes []byte
 	if headerBytes, err = h.MarshalBinary(); err != nil {
 		return
@@ -211,11 +264,15 @@ func writeRecord(c net.Conn, b []byte) (err error) {
 	if _, err = c.Write(record); err != nil {
 		return
 	}
-	readRecord(c)
 	return nil
 }
 
-func Handshake(c net.Conn) error {
+type HandshakeData struct {
+	ClientHello *ClientHello `json:"client_hello,omitempty"`
+	ServerHello *ServerHello `json:"server_hello,omitempty"`
+}
+
+func ClientHandshake(c net.Conn) (hs *HandshakeData, err error) {
 	ch := new(ClientHello)
 	// Assign ciphers
 	ch.Version = SSL_VERSION_2
@@ -227,12 +284,24 @@ func Handshake(c net.Conn) error {
 		b[2] = byte(cipher)
 	}
 	ch.Challenge = make([]byte, 16)
-	if _, err := rand.Read(ch.Challenge); err != nil {
-		return err
+	if _, err = rand.Read(ch.Challenge); err != nil {
+		return
 	}
-	b, err := ch.MarshalBinary()
+	var b []byte
+	if b, err = ch.MarshalBinary(); err != nil {
+		return
+	}
 	if err = writeRecord(c, b); err != nil {
-		return err
+		return
 	}
-	return nil
+	if b, err = readRecord(c); err != nil {
+		return
+	}
+	sh := new(ServerHello)
+	hs = new(HandshakeData)
+	hs.ServerHello = sh
+	if err = sh.UnmarshalBinary(b); err != nil {
+		return
+	}
+	return hs, nil
 }

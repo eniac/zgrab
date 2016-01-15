@@ -7,5 +7,5 @@ CMD ["openssl", "s_server", \
         "-accept", "443", \
         "-key", "server.key", \
         "-cert", "server.pem", \
-	"-ssl2" \
+	"-ssl2", "-debug" \
     ]

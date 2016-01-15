@@ -418,7 +418,9 @@ func (c *Conn) makeAndSendHTTPRequest(config *HTTPConfig) (*HTTPRequest, *HTTPRe
 
 // Do an SSLv2 probe. This doesn't complete the handshake
 func (c *Conn) SSLv2Handshake() error {
-	return sslv2.Handshake(c.getUnderlyingConn())
+	hs, err := sslv2.ClientHandshake(c.getUnderlyingConn())
+	c.grabData.SSLv2 = hs
+	return err
 }
 
 // Extra method - Do a TLS Handshake and record progress
