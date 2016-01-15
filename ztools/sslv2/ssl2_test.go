@@ -27,30 +27,19 @@ type SSLv2Suite struct {
 
 var _ = Suite(&SSLv2Suite{})
 
-func (s *SSLv2Suite) TestMarshalUnmarshalHeader(c *C) {
+func (s *SSLv2Suite) TestMarshalUnmarshalTwoByteHeader(c *C) {
 	h := Header{
 		Length: 0x08F2,
 	}
 	b, err := h.MarshalBinary()
 	c.Assert(err, IsNil)
 	c.Check(len(b), Equals, 2)
-	c.Check(b[0], Equals, byte(0x08))
+	c.Check(b[0], Equals, byte(0x88))
 	c.Check(b[1], Equals, byte(0xF2))
 	dec := Header{}
 	err = dec.UnmarshalBinary(b)
 	c.Assert(err, IsNil)
+	c.Check(dec.raw, DeepEquals, b)
+	dec.raw = nil
 	c.Check(dec, DeepEquals, h)
-}
-
-func (s *SSLv2Suite) TestMarshalUnmarshalInvalidHeader(c *C) {
-	h := Header{
-		Length: 0x8F00,
-	}
-	b, err := h.MarshalBinary()
-	c.Assert(err, NotNil)
-	c.Check(b, IsNil)
-}
-
-func (s *SSLv2Suite) TestMarshalUnmarshalClientHello(c *C) {
-
 }
