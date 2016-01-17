@@ -19,6 +19,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"net"
+
+	"github.com/zmap/zgrab/ztools/x509"
 )
 
 // Protocol message codes
@@ -140,12 +142,13 @@ func (h *ClientHello) UnmarshalBinary(b []byte) (err error) {
 }
 
 type ServerHello struct {
-	SessionIDHit    byte   `json:"session_id_hit"`
-	CertificateType byte   `json:"certificate_type"`
-	Version         uint16 `json:"version"`
-	Certificates    []byte `json:"certificates,omitempty"`
-	Ciphers         []byte `json:"ciphers,omitempty"`
-	ConnectionID    []byte `json:"connection_id,omitempty"`
+	SessionIDHit    byte                `json:"session_id_hit"`
+	CertificateType byte                `json:"certificate_type"`
+	Version         uint16              `json:"version"`
+	RawCertificates []byte              `json:"raw_certificates,omitempty"`
+	Certificates    []*x509.Certificate `json:"certificates,omitempty"`
+	Ciphers         []byte              `json:"ciphers,omitempty"`
+	ConnectionID    []byte              `json:"connection_id,omitempty"`
 
 	raw []byte
 }
@@ -181,8 +184,8 @@ func (h *ServerHello) MarshalBinary() (b []byte, err error) {
 	buf = buf[2:]
 
 	// Copy all the remaining fields
-	copy(buf, h.Certificates)
-	buf = buf[len(h.Certificates):]
+	copy(buf, h.RawCertificates)
+	buf = buf[len(h.RawCertificates):]
 
 	copy(buf, h.Ciphers)
 	buf = buf[len(h.Ciphers):]
@@ -215,12 +218,15 @@ func (h *ServerHello) UnmarshalBinary(b []byte) (err error) {
 	if len(buf) < variableLength {
 		return ErrInvalidLength
 	}
-	h.Certificates = buf[0:certificateLength]
+	h.RawCertificates = buf[0:certificateLength]
 	buf = buf[certificateLength:]
 	h.Ciphers = buf[0:cipherSpecsLength]
 	buf = buf[cipherSpecsLength:]
 	h.ConnectionID = buf[0:connectionIDLength]
 	h.raw = b[0:totalLength]
+
+	// Parse the certificates
+	h.Certificates, _ = x509.ParseCertificates(h.RawCertificates)
 	return
 }
 
