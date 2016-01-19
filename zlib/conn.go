@@ -104,6 +104,7 @@ func (c *Conn) redial() error {
 	if err != nil {
 		return err
 	}
+	newConn.SetDeadline(c.dialer.Deadline)
 	c.isTls = false
 	c.tlsConn = nil
 	c.conn = newConn
