@@ -30,6 +30,7 @@ import (
 	"github.com/zmap/zgrab/ztools/scada/fox"
 	"github.com/zmap/zgrab/ztools/scada/siemens"
 	"github.com/zmap/zgrab/ztools/telnet"
+	"github.com/zmap/zgrab/ztools/zlog"
 )
 
 type GrabTarget struct {
@@ -69,31 +70,25 @@ func NewGrabTargetDecoder(reader io.Reader) processing.Decoder {
 	return &d
 }
 
-func makeDialer(c *Config) func(string) (*Conn, error) {
+func makeDialer(config *Config) func(string) (*Conn, error) {
 	proto := "tcp"
-	if c.BACNet {
+	if config.BACNet {
 		proto = "udp"
 	}
-	timeout := c.Timeout
+	timeout := config.Timeout
 	return func(addr string) (*Conn, error) {
 		deadline := time.Now().Add(timeout)
 		d := Dialer{
 			Deadline: deadline,
 		}
-		conn, err := d.Dial(proto, addr)
-		conn.maxTlsVersion = c.TLSVersion
-		if err == nil {
-			conn.SetDeadline(deadline)
+		c, err := d.Dial(proto, addr)
+		if err != nil {
+			return nil, err
 		}
-		return conn, err
-	}
-}
-
-func makeGrabber(config *Config) func(*Conn) error {
-	// Do all the hard work here
-	g := func(c *Conn) error {
-		banner := make([]byte, 1024)
-		response := make([]byte, 65536)
+		c.dialer = d
+		c.proto = proto
+		c.addr = addr
+		c.maxTlsVersion = config.TLSVersion
 		c.SetCAPool(config.RootCAPool)
 		if config.DHEOnly {
 			c.SetDHEOnly()
@@ -136,15 +131,33 @@ func makeGrabber(config *Config) func(*Conn) error {
 			c.sshScan = &config.SSH
 		}
 		c.ReadEncoding = config.Encoding
+		return c, err
+	}
+}
+
+func makeGrabber(config *Config) func(*Conn) error {
+	// Do all the hard work here
+	g := func(c *Conn) error {
+		banner := make([]byte, 1024)
+		response := make([]byte, 65536)
 
 		if config.SSLv2 {
-			if err := c.SSLv2Handshake(); err != nil {
+			if err := c.SSLv2Handshake(); err != nil && !config.TLS {
 				c.erroredComponent = "sslv2"
 				return err
+			}
+			zlog.Debug("finished sslv2")
+			if config.TLS {
+				zlog.Debug("redialing for tls")
+				if err := c.redial(); err != nil {
+					c.erroredComponent = "tls"
+					return err
+				}
 			}
 		}
 
 		if config.TLS {
+			zlog.Debug("starting TLS")
 			if err := c.TLSHandshake(); err != nil {
 				c.erroredComponent = "tls"
 				return err
@@ -319,11 +332,11 @@ func makeGrabber(config *Config) func(*Conn) error {
 }
 
 func GrabBanner(config *Config, target *GrabTarget) *Grab {
-	dial := makeDialer(config)
-	grabber := makeGrabber(config)
 	port := strconv.FormatUint(uint64(config.Port), 10)
 	addr := target.Addr.String()
 	rhost := net.JoinHostPort(addr, port)
+	dial := makeDialer(config)
+	grabber := makeGrabber(config)
 	t := time.Now()
 	conn, dialErr := dial(rhost)
 	if target.Domain != "" {

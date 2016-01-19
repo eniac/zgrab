@@ -51,6 +51,10 @@ const (
 
 // Implements the net.Conn interface
 type Conn struct {
+	// remember the dialer
+	dialer      Dialer
+	proto, addr string
+
 	// Underlying network connection
 	conn    net.Conn
 	tlsConn *ztls.Conn
@@ -90,6 +94,20 @@ type Conn struct {
 
 	// Errored component
 	erroredComponent string
+}
+
+func (c *Conn) redial() error {
+	if err := c.Close(); err != nil {
+		return err
+	}
+	newConn, err := c.dialer.Dial(c.proto, c.addr)
+	if err != nil {
+		return err
+	}
+	c.isTls = false
+	c.tlsConn = nil
+	c.conn = newConn
+	return nil
 }
 
 func (c *Conn) getUnderlyingConn() net.Conn {

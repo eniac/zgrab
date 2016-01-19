@@ -135,10 +135,6 @@ func init() {
 		zlog.Fatalf("--connections-per-host must be in the range [0,50]")
 	}
 
-	if config.SSLv2 && config.TLS {
-		zlog.Fatal("SSLv2 and TLS are mutually exclusive")
-	}
-
 	// Validate SSH related flags
 	if config.SSH.SSH {
 		if _, ok := config.SSH.GetClientImplementation(); !ok {
