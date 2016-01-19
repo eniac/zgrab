@@ -30,7 +30,6 @@ import (
 	"github.com/zmap/zgrab/ztools/scada/fox"
 	"github.com/zmap/zgrab/ztools/scada/siemens"
 	"github.com/zmap/zgrab/ztools/telnet"
-	"github.com/zmap/zgrab/ztools/zlog"
 )
 
 type GrabTarget struct {
@@ -146,9 +145,7 @@ func makeGrabber(config *Config) func(*Conn) error {
 				c.erroredComponent = "sslv2"
 				return err
 			}
-			zlog.Debug("finished sslv2")
 			if config.TLS {
-				zlog.Debug("redialing for tls")
 				if err := c.redial(); err != nil {
 					c.erroredComponent = "tls"
 					return err
@@ -157,7 +154,6 @@ func makeGrabber(config *Config) func(*Conn) error {
 		}
 
 		if config.TLS {
-			zlog.Debug("starting TLS")
 			if err := c.TLSHandshake(); err != nil {
 				c.erroredComponent = "tls"
 				return err
