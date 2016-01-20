@@ -77,13 +77,14 @@ func makeDialer(config *Config) func(string) (*Conn, error) {
 	timeout := config.Timeout
 	return func(addr string) (*Conn, error) {
 		deadline := time.Now().Add(timeout)
-		d := Dialer{
+		d := net.Dialer{
 			Deadline: deadline,
 		}
-		c, err := d.Dial(proto, addr)
+		conn, err := d.Dial(proto, addr)
 		if err != nil {
 			return nil, err
 		}
+		c := &Conn{conn: conn}
 		c.dialer = d
 		c.proto = proto
 		c.addr = addr

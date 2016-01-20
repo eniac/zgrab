@@ -52,7 +52,7 @@ const (
 // Implements the net.Conn interface
 type Conn struct {
 	// remember the dialer
-	dialer      Dialer
+	dialer      net.Dialer
 	proto, addr string
 
 	// Underlying network connection
