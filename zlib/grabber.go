@@ -142,13 +142,19 @@ func makeGrabber(config *Config) func(*Conn) error {
 		response := make([]byte, 65536)
 
 		if config.SSLv2 {
-			if err := c.SSLv2Handshake(); err != nil && !config.TLS {
-				c.erroredComponent = "sslv2"
-				return err
+			if err := c.SSLv2Handshake(); err != nil {
+				if err, ok := err.(net.Error); ok && err.Timeout() {
+					c.erroredComponent = "timeout"
+					return err
+				}
+				if !config.TLS {
+					c.erroredComponent = "sslv2"
+					return err
+				}
 			}
 			if config.TLS {
 				if err := c.redial(); err != nil {
-					c.erroredComponent = "tls"
+					c.erroredComponent = "redial"
 					return err
 				}
 			}
