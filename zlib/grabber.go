@@ -89,6 +89,7 @@ func makeDialer(config *Config) func(string) (*Conn, error) {
 		c.proto = proto
 		c.addr = addr
 		c.maxTlsVersion = config.TLSVersion
+		c.SetDeadline(deadline)
 		c.SetCAPool(config.RootCAPool)
 		if config.DHEOnly {
 			c.SetDHEOnly()
@@ -143,10 +144,6 @@ func makeGrabber(config *Config) func(*Conn) error {
 
 		if config.SSLv2 {
 			if err := c.SSLv2Handshake(); err != nil {
-				if err, ok := err.(net.Error); ok && err.Timeout() {
-					c.erroredComponent = "timeout"
-					return err
-				}
 				if !config.TLS {
 					c.erroredComponent = "sslv2"
 					return err
