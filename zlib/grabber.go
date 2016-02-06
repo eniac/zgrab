@@ -29,6 +29,7 @@ import (
 	"github.com/zmap/zgrab/ztools/scada/dnp3"
 	"github.com/zmap/zgrab/ztools/scada/fox"
 	"github.com/zmap/zgrab/ztools/scada/siemens"
+	"github.com/zmap/zgrab/ztools/sslv2"
 	"github.com/zmap/zgrab/ztools/telnet"
 )
 
@@ -143,7 +144,11 @@ func makeGrabber(config *Config) func(*Conn) error {
 		response := make([]byte, 65536)
 
 		if config.SSLv2 {
-			if err := c.SSLv2Handshake(); err != nil {
+			sslv2Config := new(sslv2.Config)
+			if config.ExportsOnly {
+				sslv2Config.Ciphers = sslv2.ExportCiphers
+			}
+			if err := c.SSLv2Handshake(sslv2Config); err != nil {
 				if !config.TLS {
 					c.erroredComponent = "sslv2"
 					return err

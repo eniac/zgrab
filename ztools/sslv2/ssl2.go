@@ -18,6 +18,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"net"
 
 	"github.com/zmap/zgrab/ztools/x509"
@@ -25,8 +26,9 @@ import (
 
 // Protocol message codes
 const (
-	MSG_CLIENT_HELLO byte = 1
-	MSG_SERVER_HELLO byte = 4
+	MSG_TYPE_CLIENT_HELLO      byte = 1
+	MSG_TYPE_SERVER_HELLO      byte = 4
+	MSG_TYPE_CLIENT_MASTER_KEY byte = 2
 )
 
 // Version codes
@@ -40,31 +42,6 @@ const (
 var ErrInvalidLength = errors.New("Invalid SSLv2 packet length")
 
 var ErrUnexpectedMessage = errors.New("Unexpected message type")
-
-// CipherKind holds a 3-byte ID for a cipher spec. It is invalid for a
-// CipherKind to be greater than 0x00FFFFFF
-type CipherKind uint32
-
-// Stanard SSLv3 CipherKinds
-const (
-	SSL_CK_RC4_128_WITH_MD5              CipherKind = 0x010080
-	SSL_CK_RC4_128_EXPORT40_WITH_MD5     CipherKind = 0x020080
-	SSL_CK_RC2_128_CBC_WITH_MD5          CipherKind = 0x030080
-	SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5 CipherKind = 0x040080
-	SSL_CK_IDEA_128_CBC_WITH_MD5         CipherKind = 0x050080
-	SSL_CK_DES_64_CBC_WITH_MD5           CipherKind = 0x060040
-	SSL_CK_DES_192_EDE3_CBC_WITH_MD5     CipherKind = 0x0700C0
-)
-
-var defaultCiphers = []CipherKind{
-	SSL_CK_RC4_128_WITH_MD5,
-	SSL_CK_RC4_128_EXPORT40_WITH_MD5,
-	SSL_CK_RC2_128_CBC_WITH_MD5,
-	SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5,
-	SSL_CK_IDEA_128_CBC_WITH_MD5,
-	SSL_CK_DES_64_CBC_WITH_MD5,
-	SSL_CK_DES_192_EDE3_CBC_WITH_MD5,
-}
 
 type Header struct {
 	Length        uint16
@@ -104,55 +81,6 @@ func (h *Header) UnmarshalBinary(b []byte) (err error) {
 	return
 }
 
-type ClientHello struct {
-	Version   uint16
-	Ciphers   []byte
-	SessionID []byte
-	Challenge []byte
-}
-
-// MarshalBinary implements the BinaryMarshaler interface
-func (h *ClientHello) MarshalBinary() (b []byte, err error) {
-	// 1 byte flag + 2 byte version + 3 2-byte lengths of the variable len fields
-	length := 1 + 2 + 2*3 + len(h.Ciphers) + len(h.SessionID) + len(h.Challenge)
-	b = make([]byte, length)
-	buf := b
-	buf[0] = MSG_CLIENT_HELLO
-	buf = buf[1:]
-	binary.BigEndian.PutUint16(buf, h.Version)
-	buf = buf[2:]
-	binary.BigEndian.PutUint16(buf, uint16(len(h.Ciphers)))
-	buf = buf[2:]
-	binary.BigEndian.PutUint16(buf, uint16(len(h.SessionID)))
-	buf = buf[2:]
-	binary.BigEndian.PutUint16(buf, uint16(len(h.Challenge)))
-	buf = buf[2:]
-	copy(buf, h.Ciphers)
-	buf = buf[len(h.Ciphers):]
-	copy(buf, h.SessionID)
-	buf = buf[len(h.SessionID):]
-	copy(buf, h.Challenge)
-	buf = buf[len(h.Challenge):]
-	return
-}
-
-// UnmarshalBinary implements the BinaryUnmarshaler interface
-func (h *ClientHello) UnmarshalBinary(b []byte) (err error) {
-	return
-}
-
-type ServerHello struct {
-	SessionIDHit    byte                `json:"session_id_hit"`
-	CertificateType byte                `json:"certificate_type"`
-	Version         uint16              `json:"version"`
-	RawCertificates []byte              `json:"raw_certificates,omitempty"`
-	Certificates    []*x509.Certificate `json:"certificates,omitempty"`
-	Ciphers         []byte              `json:"ciphers,omitempty"`
-	ConnectionID    []byte              `json:"connection_id,omitempty"`
-
-	raw []byte
-}
-
 // MarshalBinary implements the BinaryMarshaler interface
 func (h *ServerHello) MarshalBinary() (b []byte, err error) {
 	// 1 byte version
@@ -161,10 +89,10 @@ func (h *ServerHello) MarshalBinary() (b []byte, err error) {
 	// 2 byte version
 	// Three 2-byte lengths for each variable length field
 	// The fields themselves
-	length := 1 + 1 + 1 + 2 + 2*3 + len(h.Certificates) + len(h.Ciphers) + len(h.ConnectionID)
+	length := 1 + 1 + 1 + 2 + 2*3 + len(h.Certificates) + 3*len(h.Ciphers) + len(h.ConnectionID)
 	b = make([]byte, length)
 	buf := b
-	buf[0] = MSG_SERVER_HELLO
+	buf[0] = MSG_TYPE_SERVER_HELLO
 	buf[1] = h.SessionIDHit
 	buf[2] = h.CertificateType
 	buf = buf[3:]
@@ -187,8 +115,16 @@ func (h *ServerHello) MarshalBinary() (b []byte, err error) {
 	copy(buf, h.RawCertificates)
 	buf = buf[len(h.RawCertificates):]
 
-	copy(buf, h.Ciphers)
-	buf = buf[len(h.Ciphers):]
+	encodedCiphers := buf
+	for idx, cipher := range h.Ciphers {
+		b := encodedCiphers[3*idx : 3*idx+3]
+		b[0] = byte((cipher & 0x00FF0000) >> 16)
+		b[1] = byte((cipher & 0x0000FF00) >> 8)
+		b[2] = byte(cipher)
+	}
+
+	copy(buf, encodedCiphers)
+	buf = buf[len(encodedCiphers):]
 
 	copy(buf, h.ConnectionID)
 	buf = buf[len(h.ConnectionID):]
@@ -202,7 +138,7 @@ func (h *ServerHello) UnmarshalBinary(b []byte) (err error) {
 	if len(b) < 11 {
 		return ErrInvalidLength
 	}
-	if b[0] != MSG_SERVER_HELLO {
+	if b[0] != MSG_TYPE_SERVER_HELLO {
 		return ErrUnexpectedMessage
 	}
 	h.SessionIDHit = b[1]
@@ -220,7 +156,16 @@ func (h *ServerHello) UnmarshalBinary(b []byte) (err error) {
 	}
 	h.RawCertificates = buf[0:certificateLength]
 	buf = buf[certificateLength:]
-	h.Ciphers = buf[0:cipherSpecsLength]
+
+	if cipherSpecsLength%3 != 0 {
+		return fmt.Errorf("invalid cipher specs length %d, must be a multiple of 3", cipherSpecsLength)
+	}
+
+	h.Ciphers = make([]CipherKind, cipherSpecsLength/3)
+	for idx := range h.Ciphers {
+		b := buf[3*idx : 3*idx+3]
+		h.Ciphers[idx].UnmarshalBinary(b)
+	}
 	buf = buf[cipherSpecsLength:]
 	h.ConnectionID = buf[0:connectionIDLength]
 	h.raw = b[0:totalLength]
@@ -278,17 +223,17 @@ type HandshakeData struct {
 	ServerHello *ServerHello `json:"server_hello,omitempty"`
 }
 
-func ClientHandshake(c net.Conn) (hs *HandshakeData, err error) {
+func ClientHandshake(c net.Conn, config *Config) (hs *HandshakeData, err error) {
 	ch := new(ClientHello)
-	// Assign ciphers
 	ch.Version = SSL_VERSION_2
-	ch.Ciphers = make([]byte, 3*len(defaultCiphers))
-	for idx, cipher := range defaultCiphers {
-		b := ch.Ciphers[3*idx : 3*idx+3]
-		b[0] = byte((cipher & 0x00FF0000) >> 16)
-		b[1] = byte((cipher & 0x0000FF00) >> 8)
-		b[2] = byte(cipher)
+	// Assign ciphers
+	var ciphers []CipherKind
+	if len(config.Ciphers) == 0 {
+		ciphers = AllCiphers
+	} else {
+		ciphers = config.Ciphers
 	}
+	ch.Ciphers = ciphers
 	ch.Challenge = make([]byte, 16)
 	if _, err = rand.Read(ch.Challenge); err != nil {
 		return
