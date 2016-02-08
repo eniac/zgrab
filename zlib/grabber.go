@@ -145,13 +145,33 @@ func makeGrabber(config *Config) func(*Conn) error {
 
 		if config.SSLv2 {
 			sslv2Config := new(sslv2.Config)
-			if config.ExportsOnly {
-				sslv2Config.Ciphers = sslv2.ExportCiphers
-			}
-			if err := c.SSLv2Handshake(sslv2Config); err != nil {
+			normal, err := c.SSLv2Handshake(sslv2Config)
+			c.grabData.SSLv2 = normal
+			if err != nil {
 				if !config.TLS {
 					c.erroredComponent = "sslv2"
 					return err
+				}
+			} else {
+				sslv2Config = new(sslv2.Config)
+				sslv2Config.Ciphers = sslv2.ExportCiphers
+				if err = c.redial(); err == nil {
+					c.grabData.SSLv2Export, err = c.SSLv2Handshake(sslv2Config)
+					if err != nil {
+						c.erroredComponent = "sslv2_export"
+					}
+				} else {
+					c.erroredComponent = "redial"
+				}
+				sslv2Config = new(sslv2.Config)
+				sslv2Config.ExtraPlaintext = true
+				if err = c.redial(); err == nil {
+					c.grabData.SSLv2Bug, err = c.SSLv2Handshake(sslv2Config)
+					if err != nil {
+						c.erroredComponent = "sslv2_bug"
+					}
+				} else {
+					c.erroredComponent = "redial"
 				}
 			}
 			if config.TLS {

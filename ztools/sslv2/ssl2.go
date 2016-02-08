@@ -15,6 +15,7 @@
 package sslv2
 
 import (
+	"bytes"
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/rsa"
@@ -313,12 +314,12 @@ func ClientHandshake(c net.Conn, config *Config) (hs *HandshakeData, err error) 
 
 	cmk := new(ClientMasterKey)
 	cmk.CipherKind = chosenCipherKind
-	cmk.ClearKey = masterKey[0:chosenCipher.clearKeyLen]
-	/*
-		if config.ExtraPlaintext {
-			cmk.ClearKey = append(cmk.ClearKey, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}...)
-		}
-	*/
+	cmk.ClearKey = make([]byte, chosenCipher.clearKeyLen)
+	copy(cmk.ClearKey, masterKey[0:chosenCipher.clearKeyLen])
+	if config.ExtraPlaintext {
+		extra := make([]byte, len(masterKey))
+		cmk.ClearKey = append(cmk.ClearKey, extra...)
+	}
 	cmk.EncryptedKey, err = rsa.EncryptPKCS1v15(rand.Reader, pubKey, masterKey[chosenCipher.clearKeyLen:])
 	cmk.KeyArg = make([]byte, chosenCipher.keyArgLen)
 	for idx := range cmk.KeyArg {
@@ -342,8 +343,20 @@ func ClientHandshake(c net.Conn, config *Config) (hs *HandshakeData, err error) 
 	var d []byte
 	d, err = decrypt(readCipher, b)
 	d = d[0 : len(d)-int(h.PaddingLength)]
-	zlog.Debug(d[16])
-	zlog.Debug(d[17:])
-	hs.ServerVerify.Decrypted = d[17:]
+	hs.ServerVerify.Challenge = d[17:]
+	if bytes.Equal(ch.Challenge, hs.ServerVerify.Challenge) {
+		hs.ServerVerify.Valid = true
+	}
+	if config.ExtraPlaintext && !hs.ServerVerify.Valid {
+		zlog.Debug("trying plaintext key")
+		clientReadKey, clientWriteKey = chosenCipher.deriveKey(cmk.ClearKey[chosenCipher.clearKeyLen:], ch.Challenge, sh.ConnectionID)
+		readCipher = chosenCipher.cipher(clientReadKey, cmk.KeyArg, true)
+		d, err = decrypt(readCipher, b)
+		d = d[0 : len(d)-int(h.PaddingLength)]
+		hs.ServerVerify.Challenge = d[17:]
+		if bytes.Equal(ch.Challenge, hs.ServerVerify.Challenge) {
+			hs.ServerVerify.PlaintextBug = true
+		}
+	}
 	return hs, nil
 }

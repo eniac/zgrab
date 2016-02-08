@@ -135,6 +135,9 @@ func (cmk *ClientMasterKey) MarshalSSLv2() (b []byte, err error) {
 }
 
 type ServerVerify struct {
-	Raw       []byte
-	Decrypted []byte
+	Raw          []byte `json:"raw,omitempty"`
+	MessageType  int    `json:"message_type,omitempty"`
+	Challenge    []byte `json:"challenge,omitempty"`
+	Valid        bool   `json:"valid,omitempty"`
+	PlaintextBug bool   `json:"plaintext_bug,omitempty"`
 }

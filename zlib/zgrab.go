@@ -67,6 +67,8 @@ type GrabData struct {
 	S7           *siemens.S7Log        `json:"s7,omitempty"`
 	Telnet       *telnet.TelnetLog     `json:"telnet,omitempty"`
 	SSLv2        *sslv2.HandshakeData  `json:"sslv2,omitempty"`
+	SSLv2Export  *sslv2.HandshakeData  `json:"sslv2_export,omitempty"`
+	SSLv2Bug     *sslv2.HandshakeData  `json:"sslv2_bug,omitempty"`
 }
 
 func (g *Grab) MarshalJSON() ([]byte, error) {
