@@ -25,7 +25,6 @@ import (
 
 	"github.com/dadrian/go-idea"
 	"github.com/dadrian/rc2"
-	"github.com/zmap/zgrab/ztools/zlog"
 )
 
 // CipherKind holds a 3-byte ID for a cipher spec. It is invalid for a
@@ -161,9 +160,6 @@ func sixteenByteDerivation(masterKey, challenge, connectionID []byte) (clientRea
 	h1.Write(challenge)
 	h1.Write(connectionID)
 	km1 := h1.Sum(nil)
-	zlog.Debug("km")
-	zlog.Debug(km0)
-	zlog.Debug(km1)
 
 	clientReadKey = km0[0:16]
 	clientWriteKey = km1[0:16]

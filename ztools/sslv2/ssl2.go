@@ -20,13 +20,11 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"net"
 
 	"github.com/zmap/zgrab/ztools/x509"
-	"github.com/zmap/zgrab/ztools/zlog"
 )
 
 // Protocol message codes
@@ -289,7 +287,6 @@ func ClientHandshake(c net.Conn, config *Config) (hs *HandshakeData, err error) 
 
 	chosenCipherKind, ok := findCommonCipher(ciphers, sh.Ciphers)
 	if !ok {
-		zlog.Debug("no matching cipher")
 		chosenCipherKind = SSL_CK_DES_64_CBC_WITH_MD5
 	}
 
@@ -336,9 +333,7 @@ func ClientHandshake(c net.Conn, config *Config) (hs *HandshakeData, err error) 
 	}
 	hs.ServerVerify = new(ServerVerify)
 	hs.ServerVerify.Raw = b
-	clientReadKey, clientWriteKey := chosenCipher.deriveKey(masterKey, ch.Challenge, sh.ConnectionID)
-	zlog.Debug(hex.EncodeToString(clientReadKey))
-	zlog.Debug(hex.EncodeToString(clientWriteKey))
+	clientReadKey, _ := chosenCipher.deriveKey(masterKey, ch.Challenge, sh.ConnectionID)
 	readCipher := chosenCipher.cipher(clientReadKey, cmk.KeyArg, true)
 	var d []byte
 	d, err = decrypt(readCipher, b)
@@ -348,8 +343,7 @@ func ClientHandshake(c net.Conn, config *Config) (hs *HandshakeData, err error) 
 		hs.ServerVerify.Valid = true
 	}
 	if config.ExtraPlaintext && !hs.ServerVerify.Valid {
-		zlog.Debug("trying plaintext key")
-		clientReadKey, clientWriteKey = chosenCipher.deriveKey(cmk.ClearKey[chosenCipher.clearKeyLen:], ch.Challenge, sh.ConnectionID)
+		clientReadKey, _ = chosenCipher.deriveKey(cmk.ClearKey[chosenCipher.clearKeyLen:], ch.Challenge, sh.ConnectionID)
 		readCipher = chosenCipher.cipher(clientReadKey, cmk.KeyArg, true)
 		d, err = decrypt(readCipher, b)
 		d = d[0 : len(d)-int(h.PaddingLength)]
