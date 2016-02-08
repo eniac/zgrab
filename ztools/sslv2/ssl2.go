@@ -336,7 +336,13 @@ func ClientHandshake(c net.Conn, config *Config) (hs *HandshakeData, err error) 
 	clientReadKey, _ := chosenCipher.deriveKey(masterKey, ch.Challenge, sh.ConnectionID)
 	readCipher := chosenCipher.cipher(clientReadKey, cmk.KeyArg, true)
 	var d []byte
-	d, err = decrypt(readCipher, b)
+	if d, err = decrypt(readCipher, b); err != nil {
+		return
+	}
+	if l := len(d); l < int(h.PaddingLength)+17 {
+		err = ErrInvalidLength
+		return
+	}
 	d = d[0 : len(d)-int(h.PaddingLength)]
 	hs.ServerVerify.Challenge = d[17:]
 	if bytes.Equal(ch.Challenge, hs.ServerVerify.Challenge) {
@@ -346,6 +352,10 @@ func ClientHandshake(c net.Conn, config *Config) (hs *HandshakeData, err error) 
 		clientReadKey, _ = chosenCipher.deriveKey(cmk.ClearKey[chosenCipher.clearKeyLen:], ch.Challenge, sh.ConnectionID)
 		readCipher = chosenCipher.cipher(clientReadKey, cmk.KeyArg, true)
 		d, err = decrypt(readCipher, b)
+		if l := len(d); l < int(h.PaddingLength)+17 {
+			err = ErrInvalidLength
+			return
+		}
 		d = d[0 : len(d)-int(h.PaddingLength)]
 		hs.ServerVerify.Challenge = d[17:]
 		if bytes.Equal(ch.Challenge, hs.ServerVerify.Challenge) {
