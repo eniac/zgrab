@@ -123,7 +123,7 @@ func (cmk *ClientMasterKey) MarshalSSLv2() (b []byte, err error) {
 	mw.WriteMarshaler(&cmk.CipherKind)
 	clearKeyLength := uint16(len(cmk.ClearKey))
 	encryptedKeyLength := uint16(len(cmk.EncryptedKey))
-	keyArgLength := uint16(len(cmk.EncryptedKey))
+	keyArgLength := uint16(len(cmk.KeyArg))
 	binary.Write(mw, binary.BigEndian, clearKeyLength)
 	binary.Write(mw, binary.BigEndian, encryptedKeyLength)
 	binary.Write(mw, binary.BigEndian, keyArgLength)
@@ -132,4 +132,9 @@ func (cmk *ClientMasterKey) MarshalSSLv2() (b []byte, err error) {
 	mw.Write(cmk.KeyArg)
 
 	return buf.Bytes(), mw.Error()
+}
+
+type ServerVerify struct {
+	Raw       []byte
+	Decrypted []byte
 }

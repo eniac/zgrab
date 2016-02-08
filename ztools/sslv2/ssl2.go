@@ -15,13 +15,17 @@
 package sslv2
 
 import (
+	"crypto/cipher"
 	"crypto/rand"
+	"crypto/rsa"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net"
 
 	"github.com/zmap/zgrab/ztools/x509"
+	"github.com/zmap/zgrab/ztools/zlog"
 )
 
 // Protocol message codes
@@ -175,7 +179,7 @@ func (h *ServerHello) UnmarshalBinary(b []byte) (err error) {
 	return
 }
 
-func readRecord(c net.Conn) (b []byte, err error) {
+func readRecord(c net.Conn) (header Header, b []byte, err error) {
 	headerBytes := make([]byte, 2)
 	_, err = c.Read(headerBytes)
 	if err != nil {
@@ -188,7 +192,6 @@ func readRecord(c net.Conn) (b []byte, err error) {
 			return
 		}
 	}
-	header := new(Header)
 	if err = header.UnmarshalBinary(headerBytes); err != nil {
 		return
 	}
@@ -218,9 +221,31 @@ func writeRecord(c net.Conn, b []byte) (err error) {
 	return nil
 }
 
+func decrypt(readCipher interface{}, b []byte) (d []byte, err error) {
+	payload := b
+	//zlog.Debug(len(payload))
+	d = make([]byte, len(payload))
+	switch c := readCipher.(type) {
+	case cipher.Stream:
+		c.XORKeyStream(d, payload)
+	case cbcMode:
+		blockSize := c.BlockSize()
+
+		if l := len(payload); l%blockSize != 0 {
+			return nil, fmt.Errorf("record length %d is not a multiple of block size %d", l, c.BlockSize())
+		}
+
+		c.CryptBlocks(d, payload)
+	default:
+		panic("unimplemented cipher")
+	}
+	return
+}
+
 type HandshakeData struct {
-	ClientHello *ClientHello `json:"client_hello,omitempty"`
-	ServerHello *ServerHello `json:"server_hello,omitempty"`
+	ClientHello  *ClientHello  `json:"client_hello,omitempty"`
+	ServerHello  *ServerHello  `json:"server_hello,omitempty"`
+	ServerVerify *ServerVerify `json:"server_verify,omitempty"`
 }
 
 func ClientHandshake(c net.Conn, config *Config) (hs *HandshakeData, err error) {
@@ -235,24 +260,90 @@ func ClientHandshake(c net.Conn, config *Config) (hs *HandshakeData, err error) 
 	}
 	ch.Ciphers = ciphers
 	ch.Challenge = make([]byte, 16)
-	if _, err = rand.Read(ch.Challenge); err != nil {
-		return
+	for idx := range ch.Challenge {
+		ch.Challenge[idx] = 0x02
 	}
 	var b []byte
+	var h Header
 	if b, err = ch.MarshalBinary(); err != nil {
 		return
 	}
 	if err = writeRecord(c, b); err != nil {
 		return
 	}
-	if b, err = readRecord(c); err != nil {
+	if h, b, err = readRecord(c); err != nil {
 		return
 	}
 	sh := new(ServerHello)
 	hs = new(HandshakeData)
+	hs.ClientHello = ch
 	hs.ServerHello = sh
 	if err = sh.UnmarshalBinary(b); err != nil {
 		return
 	}
+	if len(sh.Certificates) == 0 {
+		err = errors.New("could not parse certificate")
+		return
+	}
+
+	chosenCipherKind, ok := findCommonCipher(ciphers, sh.Ciphers)
+	if !ok {
+		zlog.Debug("no matching cipher")
+		chosenCipherKind = SSL_CK_DES_64_CBC_WITH_MD5
+	}
+
+	var chosenCipher *cipherSuite
+	for _, c := range cipherImplementations {
+		if c.id == chosenCipherKind {
+			chosenCipher = c
+		}
+	}
+
+	cert := sh.Certificates[0]
+	var pubKey *rsa.PublicKey
+	pubKey, ok = cert.PublicKey.(*rsa.PublicKey)
+	if !ok {
+		err = errors.New("certificate does not contain an RSA key")
+	}
+
+	masterKey := make([]byte, chosenCipher.encKeyLen+chosenCipher.clearKeyLen)
+	for idx := range masterKey {
+		masterKey[idx] = byte(idx)
+	}
+
+	cmk := new(ClientMasterKey)
+	cmk.CipherKind = chosenCipherKind
+	cmk.ClearKey = masterKey[0:chosenCipher.clearKeyLen]
+	/*
+		if config.ExtraPlaintext {
+			cmk.ClearKey = append(cmk.ClearKey, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}...)
+		}
+	*/
+	cmk.EncryptedKey, err = rsa.EncryptPKCS1v15(rand.Reader, pubKey, masterKey[chosenCipher.clearKeyLen:])
+	cmk.KeyArg = make([]byte, chosenCipher.keyArgLen)
+	for idx := range cmk.KeyArg {
+		cmk.KeyArg[idx] = byte(idx)
+	}
+	if b, err = cmk.MarshalSSLv2(); err != nil {
+		return
+	}
+	if err = writeRecord(c, b); err != nil {
+		return
+	}
+	if h, b, err = readRecord(c); err != nil {
+		return
+	}
+	hs.ServerVerify = new(ServerVerify)
+	hs.ServerVerify.Raw = b
+	clientReadKey, clientWriteKey := chosenCipher.deriveKey(masterKey, ch.Challenge, sh.ConnectionID)
+	zlog.Debug(hex.EncodeToString(clientReadKey))
+	zlog.Debug(hex.EncodeToString(clientWriteKey))
+	readCipher := chosenCipher.cipher(clientReadKey, cmk.KeyArg, true)
+	var d []byte
+	d, err = decrypt(readCipher, b)
+	d = d[0 : len(d)-int(h.PaddingLength)]
+	zlog.Debug(d[16])
+	zlog.Debug(d[17:])
+	hs.ServerVerify.Decrypted = d[17:]
 	return hs, nil
 }
