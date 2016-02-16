@@ -141,6 +141,7 @@ type Config struct {
 	EHLODomain string
 	EHLO       bool
 	StartTLS   bool
+	StartSSLv2 bool
 
 	// FTP
 	FTP        bool

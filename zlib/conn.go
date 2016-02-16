@@ -562,6 +562,39 @@ func (c *Conn) SMTPStartTLSHandshake() error {
 	return c.TLSHandshake()
 }
 
+func (c *Conn) SMTPStartSSLv2Handshake(conf *sslv2.Config) error {
+
+	// Send the command
+	if err := c.sendStartTLSCommand(SMTP_COMMAND); err != nil {
+		return err
+	}
+	// Read the response on a successful send
+	buf := make([]byte, 256)
+	n, err := c.readSmtpResponse(buf)
+	c.grabData.StartTLS = string(buf[0:n])
+
+	// Actually check return code
+	if n < 5 {
+		err = errors.New("Server did not indicate support for STARTTLS")
+	}
+	if err == nil {
+		var ret int
+		ret, err = strconv.Atoi(c.grabData.StartTLS[0:3])
+		if err != nil || ret < 200 || ret >= 300 {
+			err = errors.New("Bad return code for STARTTLS")
+		}
+	}
+
+	// Stop if we failed already
+	if err != nil {
+		return err
+	}
+
+	// Successful so far, attempt to do the actual handshake
+	c.grabData.SSLv2, err = c.SSLv2Handshake(conf)
+	return err
+}
+
 func (c *Conn) POP3StartTLSHandshake() error {
 	if err := c.sendStartTLSCommand(POP3_COMMAND); err != nil {
 		return err
@@ -582,6 +615,27 @@ func (c *Conn) POP3StartTLSHandshake() error {
 	return c.TLSHandshake()
 }
 
+func (c *Conn) POP3StartSSLv2Handshake(conf *sslv2.Config) error {
+	if err := c.sendStartTLSCommand(POP3_COMMAND); err != nil {
+		return err
+	}
+
+	buf := make([]byte, 512)
+	n, err := c.readPop3Response(buf)
+	c.grabData.StartTLS = string(buf[0:n])
+	if err == nil {
+		if !strings.HasPrefix(c.grabData.StartTLS, "+") {
+			err = errors.New("Server did not indicate support for STARTTLS")
+		}
+	}
+
+	if err != nil {
+		return err
+	}
+	c.grabData.SSLv2, err = c.SSLv2Handshake(conf)
+	return err
+}
+
 func (c *Conn) IMAPStartTLSHandshake() error {
 	if err := c.sendStartTLSCommand(IMAP_COMMAND); err != nil {
 		return err
@@ -600,6 +654,27 @@ func (c *Conn) IMAPStartTLSHandshake() error {
 		return err
 	}
 	return c.TLSHandshake()
+}
+
+func (c *Conn) IMAPStartSSLv2Handshake(conf *sslv2.Config) error {
+	if err := c.sendStartTLSCommand(IMAP_COMMAND); err != nil {
+		return err
+	}
+
+	buf := make([]byte, 512)
+	n, err := c.readImapStatusResponse(buf)
+	c.grabData.StartTLS = string(buf[0:n])
+	if err == nil {
+		if !strings.HasPrefix(c.grabData.StartTLS, "a001 OK") {
+			err = errors.New("Server did not indicate support for STARTTLS")
+		}
+	}
+
+	if err != nil {
+		return err
+	}
+	c.grabData.SSLv2, err = c.SSLv2Handshake(conf)
+	return err
 }
 
 func (c *Conn) readSmtpResponse(res []byte) (int, error) {

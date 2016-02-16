@@ -304,6 +304,28 @@ func makeGrabber(config *Config) func(*Conn) error {
 				return err
 			}
 		}
+
+		if config.StartSSLv2 {
+			conf := new(sslv2.Config)
+			conf.ExtraPlaintext = true
+			if config.IMAP {
+				if err := c.IMAPStartSSLv2Handshake(conf); err != nil {
+					c.erroredComponent = "startsslv2"
+					return err
+				}
+			} else if config.POP3 {
+				if err := c.POP3StartSSLv2Handshake(conf); err != nil {
+					c.erroredComponent = "startsslv2"
+					return err
+				}
+			} else {
+				if err := c.SMTPStartSSLv2Handshake(conf); err != nil {
+					c.erroredComponent = "startsslv2"
+					return err
+				}
+			}
+		}
+
 		if config.StartTLS {
 			if config.IMAP {
 				if err := c.IMAPStartTLSHandshake(); err != nil {

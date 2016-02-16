@@ -70,6 +70,7 @@ func init() {
 	flag.UintVar(&portFlag, "port", 80, "Port to grab on")
 	flag.UintVar(&timeout, "timeout", 10, "Set connection timeout in seconds")
 	flag.BoolVar(&config.SSLv2, "sslv2", false, "Probe for SSLv2 support")
+	flag.BoolVar(&config.StartSSLv2, "startsslv2", false, "starttls with sslv2")
 	flag.BoolVar(&config.TLS, "tls", false, "Grab over TLS")
 	flag.StringVar(&tlsVersion, "tls-version", "", "Max TLS version to use (implies --tls)")
 	flag.BoolVar(&udp, "udp", false, "Grab over UDP")
