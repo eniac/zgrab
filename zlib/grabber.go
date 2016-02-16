@@ -128,6 +128,9 @@ func makeDialer(config *Config) func(string) (*Conn, error) {
 		if config.GatherSessionTicket {
 			c.SetGatherSessionTicket()
 		}
+		if config.ExtendedMasterSecret {
+			c.SetOfferExtendedMasterSecret()
+		}
 
 		if config.SSH.SSH {
 			c.sshScan = &config.SSH
