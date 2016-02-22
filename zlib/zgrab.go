@@ -49,26 +49,26 @@ type encodedGrab struct {
 }
 
 type GrabData struct {
-	Banner       string                `json:"banner,omitempty"`
-	Read         string                `json:"read,omitempty"`
-	Write        string                `json:"write,omitempty"`
-	EHLO         string                `json:"ehlo,omitempty"`
-	SMTPHelp     *SMTPHelpEvent        `json:"smtp_help,omitempty"`
-	StartTLS     string                `json:"starttls,omitempty"`
-	TLSHandshake *ztls.ServerHandshake `json:"tls,omitempty"`
-	HTTP         *HTTP                 `json:"http,omitempty"`
-	Heartbleed   *ztls.Heartbleed      `json:"heartbleed,omitempty"`
-	Modbus       *ModbusEvent          `json:"modbus,omitempty"`
-	SSH          *ssh.HandshakeLog     `json:"ssh,omitempty"`
-	FTP          *ftp.FTPLog           `json:"ftp,omitempty"`
-	BACNet       *bacnet.Log           `json:"bacnet,omitempty"`
-	Fox          *fox.FoxLog           `json:"fox,omitempty"`
-	DNP3         *dnp3.DNP3Log         `json:"dnp3,omitempty"`
-	S7           *siemens.S7Log        `json:"s7,omitempty"`
-	Telnet       *telnet.TelnetLog     `json:"telnet,omitempty"`
-	SSLv2        *sslv2.HandshakeData  `json:"sslv2,omitempty"`
-	SSLv2Export  *sslv2.HandshakeData  `json:"sslv2_export,omitempty"`
-	SSLv2Bug     *sslv2.HandshakeData  `json:"sslv2_bug,omitempty"`
+	Banner          string                `json:"banner,omitempty"`
+	Read            string                `json:"read,omitempty"`
+	Write           string                `json:"write,omitempty"`
+	EHLO            string                `json:"ehlo,omitempty"`
+	SMTPHelp        *SMTPHelpEvent        `json:"smtp_help,omitempty"`
+	StartTLS        string                `json:"starttls,omitempty"`
+	TLSHandshake    *ztls.ServerHandshake `json:"tls,omitempty"`
+	HTTP            *HTTP                 `json:"http,omitempty"`
+	Heartbleed      *ztls.Heartbleed      `json:"heartbleed,omitempty"`
+	Modbus          *ModbusEvent          `json:"modbus,omitempty"`
+	SSH             *ssh.HandshakeLog     `json:"ssh,omitempty"`
+	FTP             *ftp.FTPLog           `json:"ftp,omitempty"`
+	BACNet          *bacnet.Log           `json:"bacnet,omitempty"`
+	Fox             *fox.FoxLog           `json:"fox,omitempty"`
+	DNP3            *dnp3.DNP3Log         `json:"dnp3,omitempty"`
+	S7              *siemens.S7Log        `json:"s7,omitempty"`
+	Telnet          *telnet.TelnetLog     `json:"telnet,omitempty"`
+	SSLv2           *sslv2.HandshakeData  `json:"sslv2,omitempty"`
+	SSLv2Export     *sslv2.HandshakeData  `json:"sslv2_export,omitempty"`
+	SSLv2ExtraClear *sslv2.HandshakeData  `json:"sslv2_extra_clear,omitempty"`
 }
 
 func (g *Grab) MarshalJSON() ([]byte, error) {

@@ -169,9 +169,9 @@ func makeGrabber(config *Config) func(*Conn) error {
 				sslv2Config = new(sslv2.Config)
 				sslv2Config.ExtraClear = true
 				if err = c.redial(); err == nil {
-					c.grabData.SSLv2Bug, err = c.SSLv2Handshake(sslv2Config)
+					c.grabData.SSLv2ExtraClear, err = c.SSLv2Handshake(sslv2Config)
 					if err != nil {
-						c.erroredComponent = "sslv2_bug"
+						c.erroredComponent = "sslv2_extra_clear"
 					}
 				} else {
 					c.erroredComponent = "redial"
@@ -184,7 +184,6 @@ func makeGrabber(config *Config) func(*Conn) error {
 				}
 			}
 		}
-
 		if config.TLS {
 			if err := c.TLSHandshake(); err != nil {
 				c.erroredComponent = "tls"
@@ -193,17 +192,23 @@ func makeGrabber(config *Config) func(*Conn) error {
 		}
 		if config.Banners {
 			if config.SMTP {
-				if _, err := c.SMTPBanner(banner); err != nil {
+				banner, err := c.SMTPBanner(banner)
+				c.grabData.Banner = banner
+				if err != nil {
 					c.erroredComponent = "banner"
 					return err
 				}
 			} else if config.POP3 {
-				if _, err := c.POP3Banner(banner); err != nil {
+				banner, err := c.POP3Banner(banner)
+				c.grabData.Banner = banner
+				if err != nil {
 					c.erroredComponent = "banner"
 					return err
 				}
 			} else if config.IMAP {
-				if _, err := c.IMAPBanner(banner); err != nil {
+				banner, err := c.IMAPBanner(banner)
+				c.grabData.Banner = banner
+				if err != nil {
 					c.erroredComponent = "banner"
 					return err
 				}
@@ -293,7 +298,9 @@ func makeGrabber(config *Config) func(*Conn) error {
 		}
 
 		if config.EHLO {
-			if err := c.EHLO(config.EHLODomain); err != nil {
+			ehlo, err := c.EHLO(config.EHLODomain)
+			c.grabData.EHLO = ehlo
+			if err != nil {
 				c.erroredComponent = "ehlo"
 				return err
 			}
@@ -307,22 +314,119 @@ func makeGrabber(config *Config) func(*Conn) error {
 
 		if config.StartSSLv2 {
 			conf := new(sslv2.Config)
-			conf.ExtraClear = true
-			if config.IMAP {
-				if err := c.IMAPStartSSLv2Handshake(conf); err != nil {
-					c.erroredComponent = "startsslv2"
+			exportConf := new(sslv2.Config)
+			exportConf.Ciphers = sslv2.ExportCiphers
+			extraClearConf := new(sslv2.Config)
+			extraClearConf.ExtraClear = true
+
+			b := make([]byte, 1024)
+			if config.SMTP {
+				x := func(sslconf *sslv2.Config) (banner, ehlo, starttls string, hs *sslv2.HandshakeData, err error) {
+					banner, err = c.SMTPBanner(b)
+					if err != nil {
+						c.erroredComponent = "banner"
+						return
+					}
+					ehlo, err = c.EHLO(config.EHLODomain)
+					if err != nil {
+						c.erroredComponent = "ehlo"
+						return
+					}
+					starttls, err = c.SMTPStartSSLv2Handshake(sslconf)
+					if err != nil {
+						c.erroredComponent = "starttls"
+						return
+					}
+					hs, err = c.SSLv2Handshake(sslconf)
+					if err != nil {
+						c.erroredComponent = "sslv2"
+						return
+					}
+					return
+				}
+				var err error
+				c.grabData.Banner, c.grabData.EHLO, c.grabData.StartTLS, c.grabData.SSLv2, err = x(conf)
+				if err != nil {
 					return err
 				}
+				if err = c.redial(); err != nil {
+					c.erroredComponent = "redial"
+					return err
+				}
+				_, _, _, c.grabData.SSLv2Export, _ = x(exportConf)
+				if err = c.redial(); err != nil {
+					c.erroredComponent = "redial"
+					return err
+				}
+				_, _, _, c.grabData.SSLv2ExtraClear, _ = x(extraClearConf)
+			} else if config.IMAP {
+				x := func(sslconf *sslv2.Config) (banner, starttls string, hs *sslv2.HandshakeData, err error) {
+					banner, err = c.IMAPBanner(b)
+					if err != nil {
+						c.erroredComponent = "banner"
+						return
+					}
+					if starttls, err = c.IMAPStartSSLv2Handshake(sslconf); err != nil {
+						c.erroredComponent = "starttls"
+						return
+					}
+					if hs, err = c.SSLv2Handshake(sslconf); err != nil {
+						c.erroredComponent = "sslv2"
+						return
+					}
+					return
+				}
+				var err error
+				c.grabData.Banner, c.grabData.StartTLS, c.grabData.SSLv2, err = x(conf)
+				if err != nil {
+					return err
+				}
+				if err = c.redial(); err != nil {
+					c.erroredComponent = "redial"
+					return err
+				}
+				_, _, c.grabData.SSLv2Export, err = x(exportConf)
+
+				if err = c.redial(); err != nil {
+					c.erroredComponent = "redial"
+					return err
+				}
+				_, _, c.grabData.SSLv2ExtraClear, _ = x(extraClearConf)
 			} else if config.POP3 {
-				if err := c.POP3StartSSLv2Handshake(conf); err != nil {
-					c.erroredComponent = "startsslv2"
+				x := func(sslconf *sslv2.Config) (banner, starttls string, hs *sslv2.HandshakeData, err error) {
+					banner, err = c.POP3Banner(b)
+					if err != nil {
+						c.erroredComponent = "banner"
+						return
+					}
+					if starttls, err = c.POP3StartSSLv2Handshake(sslconf); err != nil {
+						c.erroredComponent = "starttls"
+						return
+					}
+					if hs, err = c.SSLv2Handshake(sslconf); err != nil {
+						c.erroredComponent = "sslv2"
+						return
+					}
+					return
+				}
+				var err error
+				c.grabData.Banner, c.grabData.StartTLS, c.grabData.SSLv2, err = x(conf)
+				if err != nil {
 					return err
 				}
+				if err = c.redial(); err != nil {
+					c.erroredComponent = "redial"
+					return err
+				}
+				_, _, c.grabData.SSLv2Export, err = x(exportConf)
+
+				if err = c.redial(); err != nil {
+					c.erroredComponent = "redial"
+					return err
+				}
+				_, _, c.grabData.SSLv2ExtraClear, _ = x(extraClearConf)
 			} else {
-				if err := c.SMTPStartSSLv2Handshake(conf); err != nil {
-					c.erroredComponent = "startsslv2"
-					return err
-				}
+				panic("wat")
 			}
 		}
 
