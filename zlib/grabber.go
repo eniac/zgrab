@@ -167,7 +167,7 @@ func makeGrabber(config *Config) func(*Conn) error {
 					c.erroredComponent = "redial"
 				}
 				sslv2Config = new(sslv2.Config)
-				sslv2Config.ExtraPlaintext = true
+				sslv2Config.ExtraClear = true
 				if err = c.redial(); err == nil {
 					c.grabData.SSLv2Bug, err = c.SSLv2Handshake(sslv2Config)
 					if err != nil {
@@ -307,7 +307,7 @@ func makeGrabber(config *Config) func(*Conn) error {
 
 		if config.StartSSLv2 {
 			conf := new(sslv2.Config)
-			conf.ExtraPlaintext = true
+			conf.ExtraClear = true
 			if config.IMAP {
 				if err := c.IMAPStartSSLv2Handshake(conf); err != nil {
 					c.erroredComponent = "startsslv2"

@@ -442,7 +442,9 @@ func (c *Conn) makeAndSendHTTPRequest(config *HTTPConfig) (*HTTPRequest, *HTTPRe
 
 // Do an SSLv2 probe. This doesn't complete the handshake
 func (c *Conn) SSLv2Handshake(sslv2Config *sslv2.Config) (*sslv2.HandshakeData, error) {
-	hs, err := sslv2.ClientHandshake(c.getUnderlyingConn(), sslv2Config)
+	ssl := sslv2.Client(c.getUnderlyingConn(), sslv2Config)
+	err := ssl.Handshake()
+	hs := ssl.HandshakeLog()
 	return hs, err
 }
 

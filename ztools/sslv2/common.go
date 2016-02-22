@@ -24,8 +24,8 @@ const (
 )
 
 type Config struct {
-	Ciphers        []CipherKind
-	ExtraPlaintext bool
+	Ciphers    []CipherKind
+	ExtraClear bool
 }
 
 type marshaler interface {

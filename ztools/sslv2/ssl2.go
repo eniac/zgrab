@@ -15,10 +15,6 @@
 package sslv2
 
 import (
-	"bytes"
-	"crypto/cipher"
-	"crypto/rand"
-	"crypto/rsa"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -178,189 +174,17 @@ func (h *ServerHello) UnmarshalBinary(b []byte) (err error) {
 	return
 }
 
-func readRecord(c net.Conn) (header Header, b []byte, err error) {
-	headerBytes := make([]byte, 2)
-	_, err = c.Read(headerBytes)
-	if err != nil {
-		return
-	}
-	// Check to see if it's a 3-byte header
-	if headerBytes[0]&0x80 == 0 {
-		headerBytes = append(headerBytes, byte(0))
-		if _, err = c.Read(headerBytes[2:]); err != nil {
-			return
-		}
-	}
-	if err = header.UnmarshalBinary(headerBytes); err != nil {
-		return
-	}
-	body := make([]byte, header.Length)
-	var n int
-	n, err = c.Read(body)
-	if err != nil {
-		b = body[0:n]
-		return
-	}
-	b = body
-	return
-}
-
-func writeRecord(c net.Conn, b []byte) (err error) {
-	h := Header{
-		Length: uint16(len(b)),
-	}
-	var headerBytes []byte
-	if headerBytes, err = h.MarshalBinary(); err != nil {
-		return
-	}
-	record := append(headerBytes, b...)
-	if _, err = c.Write(record); err != nil {
-		return
-	}
-	return nil
-}
-
-func decrypt(readCipher interface{}, b []byte) (d []byte, err error) {
-	payload := b
-	//zlog.Debug(len(payload))
-	d = make([]byte, len(payload))
-	switch c := readCipher.(type) {
-	case cipher.Stream:
-		c.XORKeyStream(d, payload)
-	case cbcMode:
-		blockSize := c.BlockSize()
-
-		if l := len(payload); l%blockSize != 0 {
-			return nil, fmt.Errorf("record length %d is not a multiple of block size %d", l, c.BlockSize())
-		}
-
-		c.CryptBlocks(d, payload)
-	default:
-		panic("unimplemented cipher")
-	}
-	return
-}
-
 type HandshakeData struct {
 	ClientHello  *ClientHello  `json:"client_hello,omitempty"`
 	ServerHello  *ServerHello  `json:"server_hello,omitempty"`
 	ServerVerify *ServerVerify `json:"server_verify,omitempty"`
 }
 
-func ClientHandshake(c net.Conn, config *Config) (hs *HandshakeData, err error) {
-	ch := new(ClientHello)
-	ch.Version = SSL_VERSION_2
-	// Assign ciphers
-	var ciphers []CipherKind
-	if len(config.Ciphers) == 0 {
-		ciphers = AllCiphers
-	} else {
-		ciphers = config.Ciphers
+func Client(c net.Conn, config *Config) *Conn {
+	ssl := &Conn{
+		nc:       c,
+		isServer: false,
+		config:   config,
 	}
-	ch.Ciphers = ciphers
-	ch.Challenge = make([]byte, 16)
-	for idx := range ch.Challenge {
-		ch.Challenge[idx] = 0x02
-	}
-	var b []byte
-	var h Header
-	if b, err = ch.MarshalBinary(); err != nil {
-		return
-	}
-	if err = writeRecord(c, b); err != nil {
-		return
-	}
-	if h, b, err = readRecord(c); err != nil {
-		return
-	}
-	sh := new(ServerHello)
-	hs = new(HandshakeData)
-	hs.ClientHello = ch
-	hs.ServerHello = sh
-	if err = sh.UnmarshalBinary(b); err != nil {
-		return
-	}
-	if len(sh.Certificates) == 0 {
-		err = errors.New("could not parse certificate")
-		return
-	}
-
-	chosenCipherKind, ok := findCommonCipher(ciphers, sh.Ciphers)
-	if !ok {
-		chosenCipherKind = SSL_CK_DES_64_CBC_WITH_MD5
-	}
-
-	var chosenCipher *cipherSuite
-	for _, c := range cipherImplementations {
-		if c.id == chosenCipherKind {
-			chosenCipher = c
-		}
-	}
-
-	cert := sh.Certificates[0]
-	var pubKey *rsa.PublicKey
-	pubKey, ok = cert.PublicKey.(*rsa.PublicKey)
-	if !ok {
-		err = errors.New("certificate does not contain an RSA key")
-	}
-
-	masterKey := make([]byte, chosenCipher.encKeyLen+chosenCipher.clearKeyLen)
-	for idx := range masterKey {
-		masterKey[idx] = byte(idx)
-	}
-
-	cmk := new(ClientMasterKey)
-	cmk.CipherKind = chosenCipherKind
-	cmk.ClearKey = make([]byte, chosenCipher.clearKeyLen)
-	copy(cmk.ClearKey, masterKey[0:chosenCipher.clearKeyLen])
-	if config.ExtraPlaintext {
-		extra := make([]byte, len(masterKey))
-		cmk.ClearKey = append(cmk.ClearKey, extra...)
-	}
-	cmk.EncryptedKey, err = rsa.EncryptPKCS1v15(rand.Reader, pubKey, masterKey[chosenCipher.clearKeyLen:])
-	cmk.KeyArg = make([]byte, chosenCipher.keyArgLen)
-	for idx := range cmk.KeyArg {
-		cmk.KeyArg[idx] = byte(idx)
-	}
-	if b, err = cmk.MarshalSSLv2(); err != nil {
-		return
-	}
-	if err = writeRecord(c, b); err != nil {
-		return
-	}
-	if h, b, err = readRecord(c); err != nil {
-		return
-	}
-	hs.ServerVerify = new(ServerVerify)
-	hs.ServerVerify.Raw = b
-	clientReadKey, _ := chosenCipher.deriveKey(masterKey, ch.Challenge, sh.ConnectionID)
-	readCipher := chosenCipher.cipher(clientReadKey, cmk.KeyArg, true)
-	var d []byte
-	if d, err = decrypt(readCipher, b); err != nil {
-		return
-	}
-	if l := len(d); l < int(h.PaddingLength)+17 {
-		err = ErrInvalidLength
-		return
-	}
-	d = d[0 : len(d)-int(h.PaddingLength)]
-	hs.ServerVerify.Challenge = d[17:]
-	if bytes.Equal(ch.Challenge, hs.ServerVerify.Challenge) {
-		hs.ServerVerify.Valid = true
-	}
-	if config.ExtraPlaintext && !hs.ServerVerify.Valid {
-		clientReadKey, _ = chosenCipher.deriveKey(cmk.ClearKey[chosenCipher.clearKeyLen:], ch.Challenge, sh.ConnectionID)
-		readCipher = chosenCipher.cipher(clientReadKey, cmk.KeyArg, true)
-		d, err = decrypt(readCipher, b)
-		if l := len(d); l < int(h.PaddingLength)+17 {
-			err = ErrInvalidLength
-			return
-		}
-		d = d[0 : len(d)-int(h.PaddingLength)]
-		hs.ServerVerify.Challenge = d[17:]
-		if bytes.Equal(ch.Challenge, hs.ServerVerify.Challenge) {
-			hs.ServerVerify.PlaintextBug = true
-		}
-	}
-	return hs, nil
+	return ssl
 }
