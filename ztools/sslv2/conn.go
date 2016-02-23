@@ -96,8 +96,6 @@ func (c *Conn) clientHandshake() (err error) {
 	if c.isServer {
 		panic("cannot do a client handshake as a server")
 	}
-	hs := new(HandshakeData)
-	c.hs = hs
 
 	// Make client hello
 	ch := new(ClientHello)
@@ -119,9 +117,6 @@ func (c *Conn) clientHandshake() (err error) {
 		ch.Challenge[idx] = 0x02
 	}
 
-	// Log the client hello
-	hs.ClientHello = ch
-
 	// Send the ClientHello, read the ServerHello
 	var b []byte
 	var h Header
@@ -135,13 +130,16 @@ func (c *Conn) clientHandshake() (err error) {
 		return
 	}
 
+	hs := new(HandshakeData)
+	c.hs = hs
+
 	// Parse the ServerHello
 	sh := new(ServerHello)
 	hs.ServerHello = sh
 	if err = sh.UnmarshalBinary(b); err != nil {
 		return
 	}
-	if len(sh.Certificates) == 0 {
+	if sh.Certificate == nil {
 		err = errors.New("could not parse certificate")
 		return
 	}
@@ -171,9 +169,9 @@ func (c *Conn) clientHandshake() (err error) {
 
 	// We have a certificate, pull out the RSA key from it. All SSLv2 ciphers
 	// use RSA key exchange.
-	cert := sh.Certificates[0]
+	cert := sh.Certificate
 	var pubKey *rsa.PublicKey
-	pubKey, ok = cert.PublicKey.(*rsa.PublicKey)
+	pubKey, ok = cert.Certificate.PublicKey.(*rsa.PublicKey)
 	if !ok {
 		err = errors.New("certificate does not contain an RSA key")
 		return
@@ -223,7 +221,8 @@ func (c *Conn) clientHandshake() (err error) {
 	// Parse and decrypt server verify
 	hs.ServerVerify = new(ServerVerify)
 	hs.ServerVerify.Raw = b
-	d := b
+	var d []byte
+	d, err = c.rc.decrypt(b)
 	if l := len(d); l < int(h.PaddingLength)+17 {
 		err = ErrInvalidLength
 		return

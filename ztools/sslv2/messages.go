@@ -23,10 +23,10 @@ import (
 )
 
 type ClientHello struct {
-	Version   uint16
-	Ciphers   []CipherKind
-	SessionID []byte
-	Challenge []byte
+	Version   uint16       `json:"version"`
+	Ciphers   []CipherKind `json:"ciphers,omitempty"`
+	SessionID []byte       `json:"session_id,omitempty"`
+	Challenge []byte       `json:"challenge,omitempty"`
 }
 
 // MarshalBinary implements the BinaryMarshaler interface
@@ -63,14 +63,18 @@ func (h *ClientHello) MarshalBinary() (b []byte, err error) {
 	return
 }
 
+type ServerCertificate struct {
+	Raw         []byte            `json:"raw"`
+	Certificate *x509.Certificate `json:"parsed"`
+}
+
 type ServerHello struct {
-	SessionIDHit    byte                `json:"session_id_hit"`
-	CertificateType byte                `json:"certificate_type"`
-	Version         uint16              `json:"version"`
-	RawCertificates []byte              `json:"raw_certificates,omitempty"`
-	Certificates    []*x509.Certificate `json:"certificates,omitempty"`
-	Ciphers         []CipherKind        `json:"ciphers,omitempty"`
-	ConnectionID    []byte              `json:"connection_id,omitempty"`
+	SessionIDHit    byte               `json:"session_id_hit"`
+	CertificateType byte               `json:"certificate_type"`
+	Version         uint16             `json:"version"`
+	Certificate     *ServerCertificate `json:"certificate,omitempty"`
+	Ciphers         []CipherKind       `json:"ciphers,omitempty"`
+	ConnectionID    []byte             `json:"connection_id,omitempty"`
 
 	raw []byte
 }
@@ -135,9 +139,9 @@ func (cmk *ClientMasterKey) MarshalSSLv2() (b []byte, err error) {
 }
 
 type ServerVerify struct {
-	Raw         []byte `json:"raw,omitempty"`
-	MessageType int    `json:"message_type,omitempty"`
-	Challenge   []byte `json:"challenge,omitempty"`
-	Valid       bool   `json:"valid,omitempty"`
-	ExtraClear  bool   `json:"plaintext_bug,omitempty"`
+	Raw         []byte `json:"-"`
+	MessageType int    `json:"-"`
+	Challenge   []byte `json:"-"`
+	Valid       bool   `json:"valid"`
+	ExtraClear  bool   `json:"extra_clear,omitempty"`
 }

@@ -208,6 +208,19 @@ zgrab_tls = SubRecord({
     })
 })
 
+zgrab_sslv2 = SubRecord({
+    "server_hello": SubRecord({
+        "session_id_hit": Boolean(),
+        "certificate_type": Integer(),
+        "version": Integer(),
+        "certificate": zgrab_certificate,
+    }),
+    "server_verify": SubRecord({
+        "valid": Boolean(),
+        "extra_clear": Boolean(),
+    })
+})
+
 zgrab_base = Record({
     "ip":IPv4Address(required=True),
     "timestamp":DateTime(required=True),
@@ -216,6 +229,17 @@ zgrab_base = Record({
     "error":String(),
     "error_component":String()
 })
+
+zgrab_sslv2_multiple = SubRecord({
+    "sslv2": zgrab_sslv2,
+    "sslv2_export": zgrab_sslv2,
+    "sslv2_extra_clear": zgrab_sslv2,
+})
+
+zgrab_sslv2_starttls = SubRecord({
+    "banner": String(),
+    "starttls": String(),
+}, extends=zgrab_sslv2_multiple)
 
 zgrab_banner = Record({
     "data":SubRecord({
@@ -251,6 +275,16 @@ zgrab_tls_banner = Record({
 }, extends=zgrab_banner)
 register_schema("zgrab-imaps", zgrab_tls_banner)
 register_schema("zgrab-pop3s", zgrab_tls_banner)
+register_schema("zgrab-smtps", zgrab_tls_banner)
+
+zgrab_sslv2_basic = Record({
+    "data":zgrab_sslv2_multiple,
+}, extends=zgrab_base)
+register_schema("zgrab-imaps-sslv2", zgrab_sslv2_basic)
+register_schema("zgrab-pop3s-sslv2", zgrab_sslv2_basic)
+register_schema("zgrab-smtps-sslv2", zgrab_sslv2_basic)
+
+
 
 zgrab_starttls = Record({
     "data":SubRecord({
@@ -260,12 +294,28 @@ zgrab_starttls = Record({
 register_schema("zgrab-imap", zgrab_starttls)
 register_schema("zgrab-pop3", zgrab_starttls)
 
+zgrab_starttls_sslv2 = Record({
+    "data":SubRecord({
+        "banner": String(),
+        "starttls":String(),
+    })
+}, extends=zgrab_sslv2_basic)
+register_schema("zgrab-imap-sslv2", zgrab_starttls_sslv2)
+register_schema("zgrab-pop3-sslv2", zgrab_starttls_sslv2)
+
 zgrab_smtp = Record({
     "data":SubRecord({
         "ehlo":String(),
     })
 }, extends=zgrab_starttls)
 register_schema("zgrab-smtp", zgrab_smtp)
+
+zgrab_smtp_sslv2 = Record({
+    "data":SubRecord({
+        "ehlo":String(),
+    })
+}, extends=zgrab_starttls_sslv2)
+register_schema("zgrab-smtp-sslv2", zgrab_smtp_sslv2)
 
 
 zgrab_https = Record({
@@ -275,6 +325,7 @@ zgrab_https = Record({
 }, extends=zgrab_base)
 
 register_schema("zgrab-https", zgrab_https)
+register_schema("zgrab-https-sslv2", zgrab_sslv2_basic)
 
 zgrab_heartbleed = SubRecord({
     "heartbeat_enabled":Boolean(),

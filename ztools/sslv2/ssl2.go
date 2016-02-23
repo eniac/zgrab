@@ -88,7 +88,7 @@ func (h *ServerHello) MarshalBinary() (b []byte, err error) {
 	// 2 byte version
 	// Three 2-byte lengths for each variable length field
 	// The fields themselves
-	length := 1 + 1 + 1 + 2 + 2*3 + len(h.Certificates) + 3*len(h.Ciphers) + len(h.ConnectionID)
+	length := 1 + 1 + 1 + 2 + 2*3 + len(h.Certificate.Raw) + 3*len(h.Ciphers) + len(h.ConnectionID)
 	b = make([]byte, length)
 	buf := b
 	buf[0] = MSG_TYPE_SERVER_HELLO
@@ -101,18 +101,17 @@ func (h *ServerHello) MarshalBinary() (b []byte, err error) {
 	buf = buf[2:]
 
 	// Put in all the lengths
-	binary.BigEndian.PutUint16(buf, uint16(len(h.Certificates)))
+	binary.BigEndian.PutUint16(buf, uint16(len(h.Certificate.Raw)))
 	buf = buf[2:]
 
-	binary.BigEndian.PutUint16(buf, uint16(len(h.Ciphers)))
+	binary.BigEndian.PutUint16(buf, uint16(3*len(h.Ciphers)))
 	buf = buf[2:]
 
 	binary.BigEndian.PutUint16(buf, uint16(len(h.ConnectionID)))
 	buf = buf[2:]
 
 	// Copy all the remaining fields
-	copy(buf, h.RawCertificates)
-	buf = buf[len(h.RawCertificates):]
+	buf = buf[len(h.Certificate.Raw):]
 
 	encodedCiphers := buf
 	for idx, cipher := range h.Ciphers {
@@ -153,7 +152,9 @@ func (h *ServerHello) UnmarshalBinary(b []byte) (err error) {
 	if len(buf) < variableLength {
 		return ErrInvalidLength
 	}
-	h.RawCertificates = buf[0:certificateLength]
+	h.Certificate = new(ServerCertificate)
+	h.Certificate.Raw = make([]byte, certificateLength)
+	copy(h.Certificate.Raw, buf[0:certificateLength])
 	buf = buf[certificateLength:]
 
 	if cipherSpecsLength%3 != 0 {
@@ -170,7 +171,7 @@ func (h *ServerHello) UnmarshalBinary(b []byte) (err error) {
 	h.raw = b[0:totalLength]
 
 	// Parse the certificates
-	h.Certificates, _ = x509.ParseCertificates(h.RawCertificates)
+	h.Certificate.Certificate, _ = x509.ParseCertificate(h.Certificate.Raw)
 	return
 }
 
