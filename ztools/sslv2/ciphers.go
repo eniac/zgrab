@@ -98,8 +98,8 @@ func (ck *CipherKind) UnmarshalBinary(b []byte) error {
 
 func (ck *CipherKind) MarshalJSON() ([]byte, error) {
 	aux := struct {
-		Name string `json:"name"`
-		ID   int    `json:"id"`
+		Name string `json:"name,omitempty"`
+		ID   int    `json:"id,omitempty"`
 	}{}
 	name, _ := ciphersToNames[*ck]
 	aux.Name = name
