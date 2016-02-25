@@ -169,9 +169,17 @@ func (c *Conn) clientHandshake() (err error) {
 
 	// We have a certificate, pull out the RSA key from it. All SSLv2 ciphers
 	// use RSA key exchange.
-	cert := sh.Certificate
+	if sh.Certificate == nil {
+		err = errors.New("missing certificate")
+		return
+	}
+	cert := sh.Certificate.Certificate
+	if cert == nil {
+		err = errors.New("missing certificate")
+		return
+	}
 	var pubKey *rsa.PublicKey
-	pubKey, ok = cert.Certificate.PublicKey.(*rsa.PublicKey)
+	pubKey, ok = cert.PublicKey.(*rsa.PublicKey)
 	if !ok {
 		err = errors.New("certificate does not contain an RSA key")
 		return
