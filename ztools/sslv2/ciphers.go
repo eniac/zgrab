@@ -21,7 +21,6 @@ import (
 	"crypto/rc4"
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/dadrian/go-idea"
 	"github.com/dadrian/rc2"
@@ -98,11 +97,14 @@ func (ck *CipherKind) UnmarshalBinary(b []byte) error {
 }
 
 func (ck *CipherKind) MarshalJSON() ([]byte, error) {
-	name, ok := ciphersToNames[*ck]
-	if !ok {
-		return json.Marshal(strconv.Itoa(int(*ck)))
-	}
-	return json.Marshal(name)
+	aux := struct {
+		Name string `json:"name"`
+		ID   int    `json:"id"`
+	}{}
+	name, _ := ciphersToNames[*ck]
+	aux.Name = name
+	aux.ID = int(*ck)
+	return json.Marshal(aux)
 }
 
 func findCommonCipher(base, options []CipherKind) (ck CipherKind, ok bool) {

@@ -214,6 +214,10 @@ zgrab_sslv2 = SubRecord({
         "certificate_type": Integer(),
         "version": Integer(),
         "certificate": zgrab_certificate,
+        "ciphers": SubRecord({
+            "name": String(),
+            "id": Integer(),
+        }),
     }),
     "server_verify": SubRecord({
         "valid": Boolean(),
