@@ -210,7 +210,7 @@ zgrab_tls = SubRecord({
 
 zgrab_sslv2 = SubRecord({
     "server_hello": SubRecord({
-        "session_id_hit": Boolean(),
+        "session_id_hit": Integer(),
         "certificate_type": Integer(),
         "version": Integer(),
         "certificate": zgrab_certificate,
