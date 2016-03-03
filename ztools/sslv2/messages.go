@@ -64,8 +64,8 @@ func (h *ClientHello) MarshalBinary() (b []byte, err error) {
 }
 
 type ServerCertificate struct {
-	Raw         []byte            `json:"raw"`
-	Certificate *x509.Certificate `json:"parsed"`
+	Raw         []byte            `json:"raw,omitempty"`
+	Certificate *x509.Certificate `json:"parsed,omitempty"`
 }
 
 type ServerHello struct {
