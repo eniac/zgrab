@@ -24,7 +24,10 @@ import (
 	"runtime"
 	"strings"
 	"time"
+    "fmt"
+    "regexp"
 
+    zmq "github.com/pebbe/zmq4"
 	"github.com/zmap/zgrab/zlib"
 	"github.com/zmap/zgrab/ztools/processing"
 	"github.com/zmap/zgrab/ztools/x509"
@@ -41,7 +44,8 @@ var (
 	interfaceName                 string
 	ehlo                          string
 	portFlag                      uint
-	inputFile, metadataFile       *os.File
+    inputFile                     io.Reader
+	metadataFile                  *os.File
 	udp                           bool
 	timeout                       uint
 	tlsVersion                    string
@@ -58,12 +62,71 @@ var (
 	mailType string
 )
 
+type zmqSocket struct {
+    socket *zmq.Socket
+}
+
+// Implements io.Reader
+func NewZMQSubReader(url_sub string, filter string) (io.Reader, error) {
+    if reader, err := zmq.NewSocket(zmq.SUB); err != nil {
+        return nil, err
+    } else {
+        if err := reader.Connect(url_sub); err != nil {
+            return nil, err
+        }
+        if err := reader.SetSubscribe(filter); err != nil {
+            return nil, err
+        }
+        return zmqSocket { socket: reader }, nil
+    }
+}
+
+// Read a message from the ZMQ socket. Does not allow partial reads.
+func (z zmqSocket) Read(p []byte) (n int, err error) {
+    if s, err := z.socket.RecvMessage(0); err != nil {
+        return 0, err
+    } else {
+        if len(s) < 1 {
+            return 0, fmt.Errorf("empty message read from socket")
+        }
+        if len(s[0]) + 1 > len(p) {
+            return 0, fmt.Errorf("buffer is too short for entire read: len(buf): %v, len(read): %v", len(p), len(s[0]) + 1)
+        }
+        spl := strings.Split(s[0], " ")
+        if len(spl) != 2 {
+            return 0, fmt.Errorf("Ill-formed message %v", s[0])
+        }
+        copy(p[:], []byte(spl[1]))
+        p[len(spl[1])] = '\n'
+
+        return len(spl[1]) + 1, nil
+    }
+}
+
+// Implements io.Writer
+func NewZMQPubWriter(url_pub string) (io.Writer, error) {
+    if writer, err := zmq.NewSocket(zmq.PUSH); err != nil {
+        return nil, err
+    } else {
+        if err := writer.Connect(url_pub); err != nil {
+            return nil, err
+        }
+        return zmqSocket { socket: writer }, nil
+    }
+}
+
+// Write message to ZMQ socket.
+func (z zmqSocket) Write(p []byte) (n int, err error) {
+    _, err = z.socket.SendMessage(p)
+    return len(p), err
+}
+
 // Pre-main bind flags to variables
 func init() {
 
 	flag.StringVar(&config.Encoding, "encoding", "string", "Encode banner as string|hex|base64")
-	flag.StringVar(&outputFileName, "output-file", "-", "Output filename, use - for stdout")
-	flag.StringVar(&inputFileName, "input-file", "-", "Input filename, use - for stdin")
+    flag.StringVar(&outputFileName, "output-file", "-", "Output filename, use - for stdout or zmq:<url> for a zmq socket")
+    flag.StringVar(&inputFileName, "input-file", "-", "Input filename, use - for stdin or zmq:<url> for a zmq socket")
 	flag.StringVar(&metadataFileName, "metadata-file", "-", "File to record banner-grab metadata, use - for stdout")
 	flag.StringVar(&logFileName, "log-file", "-", "File to log to, use - for stderr")
 	flag.StringVar(&interfaceName, "interface", "", "Network interface to send on")
@@ -288,22 +351,35 @@ func init() {
 	}
 
 	// Open input and output files
+    zmqRegexp := regexp.MustCompile(`^zmq:(\S+)`)
 	switch inputFileName {
 	case "-":
 		inputFile = os.Stdin
 	default:
-		if inputFile, err = os.Open(inputFileName); err != nil {
-			zlog.Fatal(err)
-		}
+        if match := zmqRegexp.FindStringSubmatch(inputFileName); match != nil && len(match) == 2 {
+            if inputFile, err = NewZMQSubReader(match[1], fmt.Sprintf("%v",config.Port)); err != nil {
+                zlog.Fatal(err)
+            }
+        } else {
+            if inputFile, err = os.Open(inputFileName); err != nil {
+                zlog.Fatal(err)
+            }
+        }
 	}
 
 	switch outputFileName {
 	case "-":
 		outputConfig.OutputFile = os.Stdout
 	default:
-		if outputConfig.OutputFile, err = os.Create(outputFileName); err != nil {
-			zlog.Fatal(err)
-		}
+        if match := zmqRegexp.FindStringSubmatch(outputFileName); match != nil && len(match) == 2 {
+            if outputConfig.OutputFile, err = NewZMQPubWriter(match[1]); err != nil {
+                zlog.Fatal(err)
+            }
+        } else {
+            if outputConfig.OutputFile, err = os.Create(outputFileName); err != nil {
+                zlog.Fatal(err)
+            }
+        }
 	}
 
 	// Open message file, if applicable

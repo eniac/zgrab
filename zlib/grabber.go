@@ -499,6 +499,7 @@ func GrabBanner(config *Config, target *GrabTarget) *Grab {
 			target.Domain, addr, dialErr.Error())
 		return &Grab{
 			IP:             target.Addr,
+            Port:           port,
 			Domain:         target.Domain,
 			Time:           t,
 			Error:          dialErr,
@@ -511,6 +512,7 @@ func GrabBanner(config *Config, target *GrabTarget) *Grab {
 	err := grabber(conn)
 	return &Grab{
 		IP:             target.Addr,
+        Port:           port,
 		Domain:         target.Domain,
 		Time:           t,
 		Data:           conn.grabData,

@@ -17,11 +17,11 @@ package zlib
 import (
 	"encoding/json"
 	"log"
-	"os"
+	"io"
 )
 
 type OutputConfig struct {
-	OutputFile *os.File
+	OutputFile io.Writer
 	ErrorLog   *log.Logger
 }
 
