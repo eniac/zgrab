@@ -18,9 +18,9 @@ import "io"
 
 // Record sizes for two- and three-byte issues
 const (
-	MAX_TWO_BYTE_RECORD_BYTES   = 16383
-	MAX_THREE_BYTE_RECORD_BYTES = 32767
-	MAX_RECORD_BYTES            = MAX_THREE_BYTE_RECORD_BYTES
+	MAX_TWO_BYTE_RECORD_BYTES   = 32767
+	MAX_THREE_BYTE_RECORD_BYTES = 16383
+	MAX_RECORD_BYTES            = MAX_TWO_BYTE_RECORD_BYTES
 )
 
 type Config struct {
