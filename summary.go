@@ -30,6 +30,7 @@ type Summary struct {
 	Senders    uint
 	Timeout    time.Duration
 	TLSVersion string
+	IKEVersion string
 	MailType   string
 	CAFile     string
 	SNISupport bool
@@ -46,6 +47,7 @@ type encodedSummary struct {
 	Senders    uint          `json:"senders"`
 	Timeout    uint          `json:"timeout"`
 	TLSVersion *string       `json:"tls_version"`
+	IKEVersion *string       `json:"ike_version"`
 	MailType   *string       `json:"mail_type"`
 	CAFile     *string       `json:"ca_file_name"`
 	SNISupport bool          `json:"sni_support"`
@@ -65,6 +67,9 @@ func (s *Summary) MarshalJSON() ([]byte, error) {
 	e.SNISupport = s.SNISupport
 	if s.TLSVersion != "" {
 		e.TLSVersion = &s.TLSVersion
+	}
+	if s.IKEVersion != "" {
+		e.IKEVersion = &s.IKEVersion
 	}
 	if s.MailType != "" {
 		e.MailType = &s.MailType
@@ -96,6 +101,9 @@ func (s *Summary) UnmarshalJSON(b []byte) error {
 	s.Timeout = time.Duration(e.Timeout) * time.Second
 	if e.TLSVersion != nil {
 		s.TLSVersion = *e.TLSVersion
+	}
+	if e.IKEVersion != nil {
+		s.IKEVersion = *e.IKEVersion
 	}
 	if e.MailType != nil {
 		s.MailType = *e.MailType

@@ -26,6 +26,7 @@ import (
 	"github.com/zmap/zgrab/ztools/ssh"
 	"github.com/zmap/zgrab/ztools/telnet"
 	"github.com/zmap/zgrab/ztools/ztls"
+	"github.com/zmap/zgrab/ztools/ike"
 	"github.com/zmap/zgrab/ztools/scada/siemens"
 )
 
@@ -55,6 +56,7 @@ type GrabData struct {
 	SMTPHelp     *SMTPHelpEvent        `json:"smtp_help,omitempty"`
 	StartTLS     string                `json:"starttls,omitempty"`
 	TLSHandshake *ztls.ServerHandshake `json:"tls,omitempty"`
+	IKE          *ike.HandshakeLog     `json:"ike,omitempty"`
 	HTTP         *HTTP                 `json:"http,omitempty"`
 	Heartbleed   *ztls.Heartbleed      `json:"heartbleed,omitempty"`
 	Modbus       *ModbusEvent          `json:"modbus,omitempty"`

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/zmap/zgrab/ztools/ssh"
+    "github.com/zmap/zgrab/ztools/ike"
 	"github.com/zmap/zgrab/ztools/x509"
 	"github.com/zmap/zgrab/ztools/zlog"
 )
@@ -92,6 +93,17 @@ func (sc *SSHScanConfig) MakeConfig() *ssh.Config {
 	return config
 }
 
+type IKEScanConfig struct {
+    IKE                 bool
+    ConfigString      string
+}
+
+func (sc *IKEScanConfig) MakeConfig() (config *ike.Config, err error) {
+    config = new(ike.Config)
+    err = config.MakeConfig(sc.ConfigString)
+    return
+}
+
 type Config struct {
 	// Connection
 	Port               uint16
@@ -128,6 +140,9 @@ type Config struct {
 
 	// SSH
 	SSH SSHScanConfig
+
+    // IKE
+    IKE IKEScanConfig
 
 	// Banners and Data
 	Banners  bool

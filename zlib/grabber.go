@@ -109,6 +109,9 @@ func makeDialer(c *Config) func(string) (*Conn, error) {
 	if c.BACNet {
 		proto = "udp"
 	}
+    if c.IKE.IKE {
+        proto = "udp"
+    }
 	timeout := c.Timeout
 	return func(addr string) (*Conn, error) {
 		deadline := time.Now().Add(timeout)
@@ -517,6 +520,13 @@ func makeGrabber(config *Config) func(*Conn) error {
 			buf := make([]byte, 256)
 			if _, err := c.CheckHeartbleed(buf); err != nil {
 				c.erroredComponent = "heartbleed"
+				return err
+			}
+		}
+		if config.IKE.IKE {
+            c.ikeScan = &config.IKE
+			if err := c.IKEHandshake(); err != nil {
+				c.erroredComponent = "ike"
 				return err
 			}
 		}

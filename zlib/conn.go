@@ -34,6 +34,7 @@ import (
 	"github.com/zmap/zgrab/ztools/util"
 	"github.com/zmap/zgrab/ztools/x509"
 	"github.com/zmap/zgrab/ztools/ztls"
+	"github.com/zmap/zgrab/ztools/ike"
 )
 
 var smtpEndRegex = regexp.MustCompile(`(?:^\d\d\d\s.*\r\n$)|(?:^\d\d\d-[\s\S]*\r\n\d\d\d\s.*\r\n$)`)
@@ -51,12 +52,16 @@ type Conn struct {
 	// Underlying network connection
 	conn    net.Conn
 	tlsConn *ztls.Conn
+    ikeConn *ike.Conn
 	isTls   bool
 
 	grabData GrabData
 
 	// Max TLS version
 	maxTlsVersion uint16
+
+    // IKE
+    ikeScan     *IKEScanConfig
 
 	// Cache the deadlines so we can reapply after TLS handshake
 	readDeadline  time.Time
@@ -237,7 +242,7 @@ func (c *Conn) sendHTTPRequestReadHTTPResponse(req *http.Request, config *HTTPCo
 	encRes.StatusLine = res.Proto + " " + res.Status
 	encRes.VersionMajor = res.ProtoMajor
 	encRes.VersionMinor = res.ProtoMinor
-	//	encRes.Headers = HeadersFromGolangHeaders(res.Header)
+	//  encRes.Headers = HeadersFromGolangHeaders(res.Header)
 	var bodyOutput []byte
 	if len(body) > 1024*config.MaxSize {
 		bodyOutput = body[0 : 1024*config.MaxSize]
@@ -569,5 +574,14 @@ func (c *Conn) SSHHandshake() error {
 	err := client.ClientHandshake()
 	handshakeLog := client.HandshakeLog()
 	c.grabData.SSH = handshakeLog
+	return err
+}
+
+func (c *Conn) IKEHandshake() error {
+    config, _ := c.ikeScan.MakeConfig()
+	c.ikeConn = ike.Initiator(c.conn, config)
+	err := c.ikeConn.Handshake()
+	hl := c.ikeConn.HandshakeLog()
+	c.grabData.IKE = hl
 	return err
 }
