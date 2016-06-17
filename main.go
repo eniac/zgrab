@@ -163,6 +163,10 @@ func init() {
 		}
 	}
 
+    if ikeConfig != "" {
+        config.IKE.IKE = true
+    }
+
 	// Validate HTTP
 	if config.HTTP.Method != "GET" && config.HTTP.Method != "HEAD" {
 		zlog.Fatalf("Bad HTTP Method: %s. Valid options are: GET, HEAD.", config.HTTP.Method)
