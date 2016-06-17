@@ -74,17 +74,12 @@ func (c *Conn) InitiatorHandshakeMain() (err error) {
                     err = errors.New("Unable to extract Diffie-Hellman group from responser Security Exchange")
                     return
                 }
-                supported := false
-                for _, group := range SupportedDhGroups {
-                    if group == c.config.DhGroup {
-                       supported = true
-                       break
-                    }
-                }
-                if !supported {
+
+                if _, ok := groupMapV1[c.config.DhGroup]; !ok {
                     err = errors.New("Unsupported Diffie-Hellman group in responder Security Association")
                     return
                 }
+
             } else if bytes.Equal(log.Raw, c.handshakeLog.ResponderMainSA.Raw) {
                 // ignore retransmissions
             } else {
@@ -552,60 +547,16 @@ func buildAttribute(attributeConfig AttributeConfig) (a *attribute) {
     return
 }
 
-var SupportedDhGroups = []uint16 {
-    DH_768_V1,
-    DH_1024_V1,
-    DH_1536_V1,
-    DH_2048_V1,
-    DH_3072_V1,
-    DH_4096_V1,
-    DH_6144_V1,
-    DH_8192_V1,
-    DH_256_ECP_V1,
-    DH_384_ECP_V1,
-    DH_521_ECP_V1,
-    DH_1024_S160_V1,
-    DH_2048_S224_V1,
-    DH_2048_S256_V1,
-}
-
 func (c *Conn) buildPayloadKeyExchangeV1() (p *payloadKeyExchangeV1) {
     p = new(payloadKeyExchangeV1)
     if c.config.KexValue != nil {
         p.keyExchangeData = append(p.keyExchangeData, c.config.KexValue...)
         return
     }
-    switch c.config.DhGroup {
-    case DH_768_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_768...)
-    case DH_1024_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_1024...)
-    case DH_1536_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_1536...)
-    case DH_2048_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_2048...)
-    case DH_3072_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_3072...)
-    case DH_4096_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_4096...)
-    case DH_6144_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_6144...)
-    case DH_8192_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_8192...)
-    case DH_256_ECP_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_256_ECP...)
-    case DH_384_ECP_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_384_ECP...)
-    case DH_521_ECP_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_521_ECP...)
-    case DH_1024_S160_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_1024_S160...)
-    case DH_2048_S224_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_2048_S224...)
-    case DH_2048_S256_V1:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_2048_S256...)
-    default:
-        zlog.Fatalf("unsupported group: %v", c.config.DhGroup)
+    if val, ok := groupMapV1[c.config.DhGroup]; ok {
+        p.keyExchangeData = append(p.keyExchangeData, val...)
+    } else {
+        zlog.Fatalf("unsupported group: %d", c.config.DhGroup)
     }
     return
 }
@@ -617,37 +568,10 @@ func (c *Conn) buildPayloadKeyExchangeV2() (p *payloadKeyExchangeV2) {
         p.keyExchangeData = append(p.keyExchangeData, c.config.KexValue...)
         return
     }
-    switch p.dhGroup {
-    case DH_768_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_768...)
-    case DH_1024_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_1024...)
-    case DH_1536_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_1536...)
-    case DH_2048_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_2048...)
-    case DH_3072_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_3072...)
-    case DH_4096_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_4096...)
-    case DH_6144_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_6144...)
-    case DH_8192_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_8192...)
-    case DH_256_ECP_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_256_ECP...)
-    case DH_384_ECP_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_384_ECP...)
-    case DH_521_ECP_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_521_ECP...)
-    case DH_1024_S160_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_1024_S160...)
-    case DH_2048_S224_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_2048_S224...)
-    case DH_2048_S256_V2:
-        p.keyExchangeData = append(p.keyExchangeData, KEX_DH_2048_S256...)
-    default:
-        zlog.Fatalf("unsupported group: %v", p.dhGroup)
+    if val, ok := groupMapV2[c.config.DhGroup]; ok {
+        p.keyExchangeData = append(p.keyExchangeData, val...)
+    } else {
+        zlog.Fatalf("unsupported group: %d", p.dhGroup)
     }
     return
 }
