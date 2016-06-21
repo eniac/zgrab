@@ -578,7 +578,7 @@ func (c *Conn) buildPayloadKeyExchangeV2() (p *payloadKeyExchangeV2) {
 
 func (c *Conn) buildPayloadNonce() (p *payloadNonce) {
     p = new(payloadNonce)
-    // 96-byte nonce
+    // 48-byte nonce
     p.nonceData = append(p.nonceData, []byte("d3a261126ee5367a480154a1a1a3")...)
     p.nonceData = append(p.nonceData, []byte("f86ddd9e9c271cca03b413b8762c3648")...)
     p.nonceData = append(p.nonceData, []byte("f86ddd9e9c271cca03b413b8762c3648")...)
