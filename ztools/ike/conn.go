@@ -3,6 +3,7 @@ package ike
 import (
 	"net"
     "errors"
+//    "io/ioutil"
 )
 
 type Conn struct {
@@ -21,6 +22,9 @@ type Conn struct {
 
 func (c *Conn) writeMessage(msg *ikeMessage) error {
     x := msg.marshal()
+//  Use this to print out zmap probe packet
+//    _ = ioutil.WriteFile("fortigate.v1.pkt", x, 0644)
+//  panic("WROTE FILE")
     if len(x) > MAX_UDP_PAYLOAD_LEN {
         panic("message exceeds max udp payload length (disable this warning if you don't care)")
     }

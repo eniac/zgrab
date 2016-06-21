@@ -202,6 +202,235 @@ func (c *Config) MakeBaselineV2() {
     }
 }
 
+func (c *Config) MakeFortiGateV1() {
+    c.Version = VersionIKEv1
+    c.DhGroup = DH_1536_V1
+    c.ExchangeType = IDENTITY_PROTECTION_V1 // main mode
+    c.Proposals = []ProposalConfig {
+        {ProposalNum: 1, Transforms: []TransformConfig {
+            // Send these ciphersuites first, since the attack is more efficient with smaller groups:
+
+            // 3-DES, SHA1, DH_768, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_3DES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_768_V1),},
+                },
+            },
+            // AES-CBC-128, SHA1, DH_768, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(128),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_768_V1),},
+                },
+            },
+            // 3-DES, SHA1, DH_1024, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_3DES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_1024_V1),},
+                },
+            },
+            // AES-CBC-128, SHA1, DH_1024, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(128),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_1024_V1),},
+                },
+            },
+
+            // Default ciphersuites:
+
+            // 3-DES, SHA1, DH_1536, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_3DES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_1536_V1),},
+                },
+            },
+            // AES-CBC-128, SHA1, DH_1536, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(128),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_1536_V1),},
+                },
+            },
+
+            // Additional supported ciphersuites:
+
+            // 3-DES, SHA1, DH_2048, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_3DES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_2048_V1),},
+                },
+            },
+            // AES-CBC-128, SHA1, DH_2048, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(128),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_2048_V1),},
+                },
+            },
+            // AES-CBC-256, SHA2-256, DH_1536, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(256),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA2_256_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_1536_V1),},
+                },
+            },
+            // AES-CBC-256, SHA2-512, DH_1536, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(256),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA2_512_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_1536_V1),},
+                },
+            },
+            // AES-CBC-256, SHA2-256, DH_2048, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(256),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA2_256_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_2048_V1),},
+                },
+            },
+            // AES-CBC-256, SHA2-512, DH_2048, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(256),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA2_512_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_2048_V1),},
+                },
+            },
+
+            // Try them all with RSA signatures instead of PSK
+            // 3-DES, SHA1, DH_768, RSASignatures
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_3DES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(RSA_SIGNATURES_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_768_V1),},
+                },
+            },
+            // AES-CBC-128, SHA1, DH_768, RSASignatures
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(128),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(RSA_SIGNATURES_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_768_V1),},
+                },
+            },
+            // 3-DES, SHA1, DH_1024, RSASignatures
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_3DES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(RSA_SIGNATURES_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_1024_V1),},
+                },
+            },
+            // AES-CBC-128, SHA1, DH_1024, RSASignatures
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(128),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(RSA_SIGNATURES_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_1024_V1),},
+                },
+            },
+            // 3-DES, SHA1, DH_1536, RSASignatures
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_3DES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(RSA_SIGNATURES_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_1536_V1),},
+                },
+            },
+            // AES-CBC-128, SHA1, DH_1536, RSASignatures
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(128),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(RSA_SIGNATURES_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_1536_V1),},
+                },
+            },
+            // 3-DES, SHA1, DH_2048, RSASignatures
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_3DES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(RSA_SIGNATURES_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_2048_V1),},
+                },
+            },
+            // AES-CBC-128, SHA1, DH_2048, RSASignatures
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(128),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(RSA_SIGNATURES_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_2048_V1),},
+                },
+            },
+            // AES-CBC-256, SHA2-256, DH_1536, RSASignatures
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(256),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA2_256_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(RSA_SIGNATURES_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_1536_V1),},
+                },
+            },
+            // AES-CBC-256, SHA2-512, DH_1536, RSASignatures
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(256),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA2_512_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(RSA_SIGNATURES_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_1536_V1),},
+                },
+            },
+            // AES-CBC-256, SHA2-256, DH_2048, RSASignatures
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(256),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA2_256_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(RSA_SIGNATURES_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_2048_V1),},
+                },
+            },
+            // AES-CBC-256, SHA2-512, DH_2048, RSASignatures
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(256),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA2_512_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(RSA_SIGNATURES_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_2048_V1),},
+                },
+            },
+        },},
+    }
+}
+
+
 func (c *Config) Make768_V1() {
     c.Version = VersionIKEv1
     c.DhGroup = DH_768_V1
@@ -629,6 +858,8 @@ func (c *Config) MakeConfig(configString string) (err error) {
         c.Make2048_S224_V2()
     case "2048S256V2":
         c.Make2048_S256_V2()
+    case "FORTIGATEV1":
+        c.MakeFortiGateV1()
 
     // check if host validates subgroup order
     // 1
