@@ -34,3 +34,6 @@ zcertificate/zcertificate
 # Project files
 *.iml
 .idea
+
+# Temporary Vim files
+*~
