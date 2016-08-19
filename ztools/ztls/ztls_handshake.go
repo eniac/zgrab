@@ -26,6 +26,7 @@ type ClientHello struct {
 	Random         []byte `json:"random"`
 	ExtendedRandom []byte `json:"extended_random,omitempty"`
 	SessionID      []byte `json:"session_id,omitempty"`
+    SupportedCurves []keys.TLSCurveID `json:"supported_curves,omitempty"`
 }
 
 type ServerHello struct {
@@ -211,6 +212,10 @@ func (m *clientHelloMsg) MakeLog() *ClientHello {
 		ch.ExtendedRandom = make([]byte, len(m.extendedRandom))
 		copy(ch.ExtendedRandom, m.extendedRandom)
 	}
+    if len(m.supportedCurves) > 0 {
+        ch.SupportedCurves = make([]keys.TLSCurveID, len(m.supportedCurves))
+        copy(ch.SupportedCurves, m.supportedCurves)
+    }
 	return ch
 }
 

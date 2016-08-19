@@ -5,13 +5,14 @@
 import os
 
 scans = [
-        "alL_support",
-        "p224_support",
-        "brainpool256r1_support",
-        "p224_invalid",
-        "brainpool256r1_invalid",
-        "p224_twist",
-        "brainpool256r1_twist"
+        "zgrab",
+        "zgrab_alL_support",
+        "zgrab_p224_support",
+        "zgrab_brainpool256r1_support",
+        "zgrab_p224_invalid",
+        "zgrab_brainpool256r1_invalid",
+        "zgrab_p224_twist",
+        "zgrab_brainpool256r1_twist"
         ]
 
 configs = [ 
@@ -34,7 +35,7 @@ for scan in scans:
     for config in configs:
 
         scanDir = os.path.join(scan, config[0])
-        executable = "zgrab_{scan}".format(scan=scan)
+        executable = "{scan}".format(scan=scan)
         try:
             os.makedirs(scanDir)
         except Exception:
@@ -50,7 +51,7 @@ for scan in scans:
             #f.write('seed 19105\n')
             f.write('metadata zmap.meta.json\n')
             f.write('cooldown-time 5\n')
-            f.write('max-targets 1%\n')
+            f.write('max-targets 0.01%\n')
             f.write('interface "p4p1"\n')
             f.write('blacklist-file "/etc/zmap/blacklist.conf"\n')
 

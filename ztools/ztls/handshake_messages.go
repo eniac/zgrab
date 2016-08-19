@@ -4,7 +4,10 @@
 
 package ztls
 
-import "bytes"
+import (
+    "bytes"
+    "github.com/zmap/zgrab/ztools/keys"
+)
 
 type clientHelloMsg struct {
 	raw                   []byte
@@ -16,7 +19,7 @@ type clientHelloMsg struct {
 	nextProtoNeg          bool
 	serverName            string
 	ocspStapling          bool
-	supportedCurves       []CurveID
+	supportedCurves       []keys.TLSCurveID
 	supportedPoints       []uint8
 	ticketSupported       bool
 	sessionTicket         []uint8
@@ -407,10 +410,10 @@ func (m *clientHelloMsg) unmarshal(data []byte) bool {
 				return false
 			}
 			numCurves := l / 2
-			m.supportedCurves = make([]CurveID, numCurves)
+			m.supportedCurves = make([]keys.TLSCurveID, numCurves)
 			d := data[2:]
 			for i := 0; i < numCurves; i++ {
-				m.supportedCurves[i] = CurveID(d[0])<<8 | CurveID(d[1])
+				m.supportedCurves[i] = keys.TLSCurveID(d[0])<<8 | keys.TLSCurveID(d[1])
 				d = d[2:]
 			}
 		case extensionSupportedPoints:
@@ -1457,7 +1460,7 @@ func eqUint16s(x, y []uint16) bool {
 	return true
 }
 
-func eqCurveIDs(x, y []CurveID) bool {
+func eqCurveIDs(x, y []keys.TLSCurveID) bool {
 	if len(x) != len(y) {
 		return false
 	}

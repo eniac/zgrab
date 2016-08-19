@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/zmap/zgrab/ztools/x509"
+    "github.com/zmap/zgrab/ztools/keys"
 )
 
 const (
@@ -88,16 +89,6 @@ const (
 // TLS signaling cipher suite values
 const (
 	scsvRenegotiation uint16 = 0x00ff
-)
-
-// CurveID is the type of a TLS identifier for an elliptic curve. See
-// http://www.iana.org/assignments/tls-parameters/tls-parameters.xml#tls-parameters-8
-type CurveID uint16
-
-const (
-	CurveP256 CurveID = 23
-	CurveP384 CurveID = 24
-	CurveP521 CurveID = 25
 )
 
 // TLS Elliptic Curve Point Formats
@@ -322,7 +313,7 @@ type Config struct {
 	// CurvePreferences contains the elliptic curves that will be used in
 	// an ECDHE handshake, in preference order. If empty, the default will
 	// be used.
-	CurvePreferences []CurveID
+	CurvePreferences []keys.TLSCurveID
 
 	serverInitOnce sync.Once // guards calling (*Config).serverInit
 
@@ -403,9 +394,10 @@ func (c *Config) maxVersion() uint16 {
 	return c.MaxVersion
 }
 
-var defaultCurvePreferences = []CurveID{CurveP256, CurveP384, CurveP521}
+//var defaultCurvePreferences = []keys.TLSCurveID{keys.Secp256r1, keys.Secp384r1, keys.Secp521r1}
+var defaultCurvePreferences = []keys.TLSCurveID{keys.Secp224r1}
 
-func (c *Config) curvePreferences() []CurveID {
+func (c *Config) curvePreferences() []keys.TLSCurveID {
 	if c == nil || len(c.CurvePreferences) == 0 {
 		return defaultCurvePreferences
 	}

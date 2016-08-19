@@ -20,6 +20,7 @@ import (
 	"math/big"
 
 	"github.com/zmap/zgrab/ztools/x509"
+	"github.com/zmap/zgrab/ztools/keys"
 )
 
 var errClientKeyExchange = errors.New("tls: invalid ClientKeyExchange message")
@@ -269,13 +270,15 @@ func pickTLS12HashForSignature(sigType uint8, clientList, serverList []signature
 	return 0, errors.New("tls: client doesn't support any common hash functions")
 }
 
-func curveForCurveID(id CurveID) (elliptic.Curve, bool) {
+func curveForCurveID(id keys.TLSCurveID) (elliptic.Curve, bool) {
 	switch id {
-	case CurveP256:
+    case keys.Secp224r1:
+        return elliptic.P224(), true
+	case keys.Secp256r1:
 		return elliptic.P256(), true
-	case CurveP384:
+	case keys.Secp384r1:
 		return elliptic.P384(), true
-	case CurveP521:
+	case keys.Secp521r1:
 		return elliptic.P521(), true
 	default:
 		return nil, false
@@ -472,7 +475,7 @@ type ecdheKeyAgreement struct {
 }
 
 func (ka *ecdheKeyAgreement) generateServerKeyExchange(config *Config, cert *Certificate, clientHello *clientHelloMsg, hello *serverHelloMsg) (*serverKeyExchangeMsg, error) {
-	var curveid CurveID
+	var curveid keys.TLSCurveID
 	preferredCurves := config.curvePreferences()
 
 NextCandidate:
@@ -537,7 +540,7 @@ func (ka *ecdheKeyAgreement) processServerKeyExchange(config *Config, clientHell
 	if skx.key[0] != 3 { // named curve
 		return errors.New("tls: server selected unsupported curve")
 	}
-	curveid := CurveID(skx.key[1])<<8 | CurveID(skx.key[2])
+	curveid := keys.TLSCurveID(skx.key[1])<<8 | keys.TLSCurveID(skx.key[2])
 	ka.curveID = uint16(curveid)
 
 	var ok bool
