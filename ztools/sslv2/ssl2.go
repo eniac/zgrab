@@ -50,7 +50,8 @@ type Header struct {
 
 // MarshalBinary implements the BinaryMarshaler interface
 func (h *Header) MarshalBinary() (b []byte, err error) {
-	if h.Length > uint16(16383) {
+	// Only supports 2 byte headers
+	if h.Length > uint16(MAX_TWO_BYTE_RECORD_BYTES) {
 		err = ErrInvalidLength
 		return
 	}

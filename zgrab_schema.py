@@ -1,4 +1,6 @@
-from zschema import *
+from zschema.leaves import *
+from zschema.compounds import *
+import zschema.registry
 
 zgrab_subj_issuer = SubRecord({
     "serial_number":ListOf(String()),
@@ -214,10 +216,10 @@ zgrab_sslv2 = SubRecord({
         "certificate_type": Integer(),
         "version": Integer(),
         "certificate": zgrab_certificate,
-        "ciphers": SubRecord({
+        "ciphers": ListOf(SubRecord({
             "name": String(),
             "id": Integer(),
-        }),
+        })),
     }),
     "server_verify": SubRecord({
         "valid": Boolean(),
@@ -251,7 +253,7 @@ zgrab_banner = Record({
     })
 }, extends=zgrab_base)
 
-register_schema("zgrab-ftp", zgrab_banner)
+zschema.registry.register_schema("zgrab-ftp", zgrab_banner)
 
 caps_list = ListOf(SubRecord({
     "name":String(),
@@ -270,23 +272,23 @@ zgrab_telnet = Record({
     })
 }, extends=zgrab_base)
 
-register_schema("zgrab-telnet", zgrab_telnet)
+zschema.registry.register_schema("zgrab-telnet", zgrab_telnet)
 
 zgrab_tls_banner = Record({
     "data":SubRecord({
         "tls":zgrab_tls,
     })
 }, extends=zgrab_banner)
-register_schema("zgrab-imaps", zgrab_tls_banner)
-register_schema("zgrab-pop3s", zgrab_tls_banner)
-register_schema("zgrab-smtps", zgrab_tls_banner)
+zschema.registry.register_schema("zgrab-imaps", zgrab_tls_banner)
+zschema.registry.register_schema("zgrab-pop3s", zgrab_tls_banner)
+zschema.registry.register_schema("zgrab-smtps", zgrab_tls_banner)
 
 zgrab_sslv2_basic = Record({
     "data":zgrab_sslv2_multiple,
 }, extends=zgrab_base)
-register_schema("zgrab-imaps-sslv2", zgrab_sslv2_basic)
-register_schema("zgrab-pop3s-sslv2", zgrab_sslv2_basic)
-register_schema("zgrab-smtps-sslv2", zgrab_sslv2_basic)
+zschema.registry.register_schema("zgrab-imaps-sslv2", zgrab_sslv2_basic)
+zschema.registry.register_schema("zgrab-pop3s-sslv2", zgrab_sslv2_basic)
+zschema.registry.register_schema("zgrab-smtps-sslv2", zgrab_sslv2_basic)
 
 
 
@@ -295,8 +297,8 @@ zgrab_starttls = Record({
         "starttls":String(),
     })
 }, extends=zgrab_tls_banner)
-register_schema("zgrab-imap", zgrab_starttls)
-register_schema("zgrab-pop3", zgrab_starttls)
+zschema.registry.register_schema("zgrab-imap", zgrab_starttls)
+zschema.registry.register_schema("zgrab-pop3", zgrab_starttls)
 
 zgrab_starttls_sslv2 = Record({
     "data":SubRecord({
@@ -304,22 +306,22 @@ zgrab_starttls_sslv2 = Record({
         "starttls":String(),
     })
 }, extends=zgrab_sslv2_basic)
-register_schema("zgrab-imap-sslv2", zgrab_starttls_sslv2)
-register_schema("zgrab-pop3-sslv2", zgrab_starttls_sslv2)
+zschema.registry.register_schema("zgrab-imap-sslv2", zgrab_starttls_sslv2)
+zschema.registry.register_schema("zgrab-pop3-sslv2", zgrab_starttls_sslv2)
 
 zgrab_smtp = Record({
     "data":SubRecord({
         "ehlo":String(),
     })
 }, extends=zgrab_starttls)
-register_schema("zgrab-smtp", zgrab_smtp)
+zschema.registry.register_schema("zgrab-smtp", zgrab_smtp)
 
 zgrab_smtp_sslv2 = Record({
     "data":SubRecord({
         "ehlo":String(),
     })
 }, extends=zgrab_starttls_sslv2)
-register_schema("zgrab-smtp-sslv2", zgrab_smtp_sslv2)
+zschema.registry.register_schema("zgrab-smtp-sslv2", zgrab_smtp_sslv2)
 
 
 zgrab_https = Record({
@@ -328,8 +330,8 @@ zgrab_https = Record({
     })
 }, extends=zgrab_base)
 
-register_schema("zgrab-https", zgrab_https)
-register_schema("zgrab-https-sslv2", zgrab_sslv2_basic)
+zschema.registry.register_schema("zgrab-https", zgrab_https)
+zschema.registry.register_schema("zgrab-https-sslv2", zgrab_sslv2_basic)
 
 zgrab_heartbleed = SubRecord({
     "heartbeat_enabled":Boolean(),
@@ -342,7 +344,7 @@ zgrab_https_heartbleed = Record({
     })
 }, extends=zgrab_https)
 
-register_schema("zgrab-https-heartbleed", zgrab_https_heartbleed)
+zschema.registry.register_schema("zgrab-https-heartbleed", zgrab_https_heartbleed)
 
 zgrab_unknown_http_header = SubRecord({
     "key":String(),
@@ -433,7 +435,7 @@ zgrab_http = Record({
     })
 }, extends=zgrab_base)
 
-register_schema("zgrab-http", zgrab_http)
+zschema.registry.register_schema("zgrab-http", zgrab_http)
 
 zgrab_http_proxy = Record({
     "data":SubRecord({
@@ -443,7 +445,7 @@ zgrab_http_proxy = Record({
       })
     })
 }, extends=zgrab_http)
-register_schema("zgrab-proxy", zgrab_http_proxy)
+zschema.registry.register_schema("zgrab-proxy", zgrab_http_proxy)
 
 zgrab_old_http = Record({
     "data":SubRecord({
@@ -452,7 +454,7 @@ zgrab_old_http = Record({
     })
 }, extends=zgrab_base)
 
-register_schema("zgrab-old-http", zgrab_old_http)
+zschema.registry.register_schema("zgrab-old-http", zgrab_old_http)
 
 zgrab_bacnet = Record({
     "data": SubRecord({
@@ -471,7 +473,7 @@ zgrab_bacnet = Record({
     }),
 }, extends=zgrab_base)
 
-register_schema("zgrab-bacnet", zgrab_bacnet)
+zschema.registry.register_schema("zgrab-bacnet", zgrab_bacnet)
 
 zgrab_fox = Record({
     "data": SubRecord({
@@ -499,7 +501,7 @@ zgrab_fox = Record({
     }),
 }, extends=zgrab_base)
 
-register_schema("zgrab-fox", zgrab_fox)
+zschema.registry.register_schema("zgrab-fox", zgrab_fox)
 
 zgrab_modbus = Record({
     "data":SubRecord({
@@ -530,7 +532,7 @@ zgrab_modbus = Record({
     }),
 }, extends=zgrab_base)
 
-register_schema("zgrab-modbus", zgrab_modbus)
+zschema.registry.register_schema("zgrab-modbus", zgrab_modbus)
 
 zgrab_dnp3 = Record({
     "data":SubRecord({
@@ -541,7 +543,7 @@ zgrab_dnp3 = Record({
     }),
 }, extends=zgrab_base)
 
-register_schema("zgrab-dnp3", zgrab_dnp3)
+zschema.registry.register_schema("zgrab-dnp3", zgrab_dnp3)
 
 zgrab_s7 = Record({
     "data":SubRecord({
@@ -565,7 +567,7 @@ zgrab_s7 = Record({
     }),
 }, extends=zgrab_base)
 
-register_schema("zgrab-s7", zgrab_s7)
+zschema.registry.register_schema("zgrab-s7", zgrab_s7)
 
 zgrab_ssh_protocol_agreement = SubRecord({
     "raw_banner": AnalyzedString(),
@@ -634,4 +636,4 @@ zgrab_ssh = Record({
     }),
 }, extends=zgrab_base)
 
-register_schema("zgrab-ssh", zgrab_ssh)
+zschema.registry.register_schema("zgrab-ssh", zgrab_ssh)

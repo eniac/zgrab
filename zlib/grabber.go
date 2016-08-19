@@ -297,14 +297,6 @@ func makeGrabber(config *Config) func(*Conn) error {
 			}
 		}
 
-		if config.EHLO {
-			ehlo, err := c.EHLO(config.EHLODomain)
-			c.grabData.EHLO = ehlo
-			if err != nil {
-				c.erroredComponent = "ehlo"
-				return err
-			}
-		}
 		if config.SMTPHelp {
 			if err := c.SMTPHelp(); err != nil {
 				c.erroredComponent = "smtp_help"
@@ -428,6 +420,7 @@ func makeGrabber(config *Config) func(*Conn) error {
 			} else {
 				panic("wat")
 			}
+			return nil
 		}
 
 		if config.StartTLS {
