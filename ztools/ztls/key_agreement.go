@@ -21,6 +21,7 @@ import (
 
 	"github.com/zmap/zgrab/ztools/x509"
 	"github.com/zmap/zgrab/ztools/keys"
+    "github.com/keybase/go-crypto/brainpool"
 )
 
 var errClientKeyExchange = errors.New("tls: invalid ClientKeyExchange message")
@@ -272,6 +273,18 @@ func pickTLS12HashForSignature(sigType uint8, clientList, serverList []signature
 
 func curveForCurveID(id keys.TLSCurveID) (elliptic.Curve, bool) {
 	switch id {
+//    case keys.BrainpoolP256t1:
+//        return brainpool.P256t1(), true
+    case keys.BrainpoolP256r1:
+        return brainpool.P256r1(), true
+//    case keys.BrainpoolP384t1:
+//        return brainpool.P384t1(), true
+    case keys.BrainpoolP384r1:
+        return brainpool.P384r1(), true
+//    case keys.BrainpoolP512t1:
+//        return brainpool.P512t1(), true
+    case keys.BrainpoolP512r1:
+        return brainpool.P512r1(), true
     case keys.Secp224r1:
         return elliptic.P224(), true
 	case keys.Secp256r1:
