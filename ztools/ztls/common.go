@@ -15,6 +15,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+    "strconv"
 
 	"github.com/zmap/zgrab/ztools/x509"
     "github.com/zmap/zgrab/ztools/keys"
@@ -394,8 +395,27 @@ func (c *Config) maxVersion() uint16 {
 	return c.MaxVersion
 }
 
-//var defaultCurvePreferences = []keys.TLSCurveID{keys.Secp256r1, keys.Secp384r1, keys.Secp521r1}
-var defaultCurvePreferences = []keys.TLSCurveID{keys.Secp224r1}
+var defaultCurvePreferences = []keys.TLSCurveID{keys.Secp256r1, keys.Secp384r1, keys.Secp521r1}
+var allCurvePreferences = []keys.TLSCurveID{keys.Secp224r1,keys.Secp256r1, keys.Secp384r1, keys.Secp521r1,keys.BrainpoolP256r1,keys.BrainpoolP384r1,keys.BrainpoolP512r1}
+
+func (c *Config) SetCurvePreferences(pref string) {
+    if pref == "all" {
+        c.CurvePreferences = allCurvePreferences
+    } else if pref == "default" {
+        c.CurvePreferences = defaultCurvePreferences
+    } else {
+        spl := strings.Split(pref, ",")
+        if len(spl) > 0 {
+            for _,str := range(spl) {
+                if id,err := strconv.ParseUint(str, 10, 16); err == nil {
+                    c.CurvePreferences = append(c.CurvePreferences, keys.TLSCurveID(id))
+                } else {
+                    panic("unable to parse curve ID")
+                }
+            }
+        }
+    }
+}
 
 func (c *Config) curvePreferences() []keys.TLSCurveID {
 	if c == nil || len(c.CurvePreferences) == 0 {

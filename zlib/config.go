@@ -125,6 +125,7 @@ type Config struct {
 	GatherSessionTicket  bool
 	ExtendedMasterSecret bool
 	TLSVerbose           bool
+    CurvePreferences     string
 
 	// SSH
 	SSH SSHScanConfig

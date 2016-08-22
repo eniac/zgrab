@@ -193,7 +193,6 @@ func makeHTTPGrabber(config *Config, grabData GrabData) func(string, string, str
 			if !config.NoSNI && urlHost != "" {
 				tlsConfig.ServerName = urlHost
 			}
-
 		}
 
 		transport := &http.Transport{
@@ -323,6 +322,9 @@ func makeGrabber(config *Config) func(*Conn) error {
 		if config.TLSVerbose {
 			c.SetTLSVerbose()
 		}
+        if len(config.CurvePreferences) > 0 {
+            c.CurvePreferences = config.CurvePreferences
+        }
 
 		if config.SSH.SSH {
 			c.sshScan = &config.SSH
