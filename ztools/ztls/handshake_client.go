@@ -507,6 +507,11 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 		return err
 	}
 
+    // TEST
+	hs.preMasterSecret = make([]byte, len(preMasterSecret))
+	copy(hs.preMasterSecret, preMasterSecret)
+	c.handshakeLog.KeyMaterial = hs.MakeLog()
+
 	c.handshakeLog.ClientKeyExchange = ckx.MakeLog(keyAgreement)
 
 	if ckx != nil {
@@ -587,8 +592,8 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 		sr = hs.serverHello.random
 	}
 
-	hs.preMasterSecret = make([]byte, len(preMasterSecret))
-	copy(hs.preMasterSecret, preMasterSecret)
+	//hs.preMasterSecret = make([]byte, len(preMasterSecret))
+	//copy(hs.preMasterSecret, preMasterSecret)
 
 	if hs.serverHello.extendedMasterSecret && c.vers >= VersionTLS10 {
 		hs.masterSecret = extendedMasterFromPreMasterSecret(c.vers, hs.suite, preMasterSecret, hs.finishedHash)

@@ -594,6 +594,19 @@ func (ka *ecdheKeyAgreement) generateClientKeyExchange(config *Config, clientHel
 	ka.clientY = my
 
 	x, _ := ka.curve.ScalarMult(ka.x, ka.y, priv)
+    // brainpoolp256r1
+    //x, _ = new(big.Int).SetString("63920615337038009085899294549208317353858297051190087290945230737963992164364", 10)
+    //mx, _ = new(big.Int).SetString("63920615337038009085899294549208317353858297051190087290945230737963992164364", 10)
+    //my, _ = new(big.Int).SetString("4976541995988168118037362228331943167690304268835389906024204042719653440681", 10)
+    // NIST-P224 generator of subgroup of order 11 on twist
+    //x, _ = new(big.Int).SetString("21219928721835262216070635629075256199931199995500865785214182108232", 10)
+    //mx, _ = new(big.Int).SetString("21219928721835262216070635629075256199931199995500865785214182108232", 10)
+    //my, _ = new(big.Int).SetString("2486431965114139990348241493232938533843075669604960787364227498903", 10)
+    // NIST-P224 generator of subgroup of order 13 on curve w/ B-1
+    //x, _ = new(big.Int).SetString("1234919426772886915432358412587735557527373236174597031415308881584", 10)
+    //mx, _ = new(big.Int).SetString("1234919426772886915432358412587735557527373236174597031415308881584", 10)
+    //my, _ = new(big.Int).SetString("218592750580712164156183367176268299828628545379017213517316023994", 10)
+
 	preMasterSecret := make([]byte, (ka.curve.Params().BitSize+7)>>3)
 	xBytes := x.Bytes()
 	copy(preMasterSecret[len(preMasterSecret)-len(xBytes):], xBytes)
