@@ -44,7 +44,6 @@ var (
 	inputFile, metadataFile       *os.File
 	timeout                       uint
 	tlsVersion                    string
-	ikeConfig                     string
 	rootCAFileName                string
 )
 
@@ -127,7 +126,7 @@ func init() {
 	flag.StringVar(&config.SSH.FixedKexValue, "ssh-kex-value", "", "Set SSH DH kex value in hexadecimal")
 	flag.BoolVar(&config.SSH.NegativeOne, "ssh-negative-one", false, "Set SSH DH kex value to -1 in the selected group")
 	flag.BoolVar(&config.IKE.IKE, "ike", false, "IKE scan")
-	flag.StringVar(&ikeConfig, "ike-config", "", "IKE configuration to use (implies --ike)")
+	flag.StringVar(&config.IKE.ConfigString, "ike-config", "", "IKE configuration to use (implies --ike)")
 	flag.BoolVar(&config.Telnet, "telnet", false, "Read telnet banners")
 	flag.IntVar(&config.TelnetMaxSize, "telnet-max-size", 65536, "Max bytes to read for telnet banner")
 
@@ -163,7 +162,7 @@ func init() {
 		}
 	}
 
-    if ikeConfig != "" {
+    if config.IKE.ConfigString != "" {
         config.IKE.IKE = true
     }
 
