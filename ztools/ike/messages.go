@@ -368,6 +368,10 @@ func (p *payload) unmarshal(data []byte) bool {
     p.reserved = uint8(data[1])
     p.length = uint16(data[2]) << 8 | uint16(data[3])
 
+    if int(p.length) < IKE_PAYLOAD_HEADER_LEN {
+        return false
+    }
+
     if len(data) < int(p.length) {
         return false
     }

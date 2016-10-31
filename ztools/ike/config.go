@@ -863,6 +863,14 @@ func (c *Config) MakeConfig(configString string) (err error) {
 
     // check if host validates subgroup order
     // 1
+    case "1024S160V1_1":
+        c.Make1024_S160_V1()
+        c.KexValue = make([]byte, 128)
+        c.KexValue[127] = 0x01
+    case "1024S160V2_1":
+        c.Make1024_S160_V2()
+        c.KexValue = make([]byte, 128)
+        c.KexValue[127] = 0x01
     case "2048S224V1_1":
         c.Make2048_S224_V1()
         c.KexValue = make([]byte, 256)
@@ -871,13 +879,52 @@ func (c *Config) MakeConfig(configString string) (err error) {
         c.Make2048_S224_V2()
         c.KexValue = make([]byte, 256)
         c.KexValue[255] = 0x01
+    case "2048S256V1_1":
+        c.Make2048_S256_V1()
+        c.KexValue = make([]byte, 256)
+        c.KexValue[255] = 0x01
+    case "2048S256V2_1":
+        c.Make2048_S256_V2()
+        c.KexValue = make([]byte, 256)
+        c.KexValue[255] = 0x01
     // p-1
+    case "1024S160V1_M1":
+        c.Make1024_S160_V1()
+        c.KexValue = append([]byte{}, KEX_DH_1024_S160_M1...)
+    case "1024S160V2_M1":
+        c.Make1024_S160_V2()
+        c.KexValue = append([]byte{}, KEX_DH_1024_S160_M1...)
     case "2048S224V1_M1":
         c.Make2048_S224_V1()
         c.KexValue = append([]byte{}, KEX_DH_2048_S224_M1...)
     case "2048S224V2_M1":
         c.Make2048_S224_V2()
         c.KexValue = append([]byte{}, KEX_DH_2048_S224_M1...)
+    case "2048S256V1_M1":
+        c.Make2048_S256_V1()
+        c.KexValue = append([]byte{}, KEX_DH_2048_S256_M1...)
+    case "2048S256V2_M1":
+        c.Make2048_S256_V2()
+        c.KexValue = append([]byte{}, KEX_DH_2048_S256_M1...)
+    // 0
+    case "1024S160V1_0":
+        c.Make1024_S160_V1()
+        c.KexValue = make([]byte, 128)
+    case "1024S160V2_0":
+        c.Make1024_S160_V2()
+        c.KexValue = make([]byte, 128)
+    case "2048S224V1_0":
+        c.Make2048_S224_V1()
+        c.KexValue = make([]byte, 256)
+    case "2048S224V2_0":
+        c.Make2048_S224_V2()
+        c.KexValue = make([]byte, 256)
+    case "2048S256V1_0":
+        c.Make2048_S256_V1()
+        c.KexValue = make([]byte, 256)
+    case "2048S256V2_0":
+        c.Make2048_S256_V2()
+        c.KexValue = make([]byte, 256)
     // subgroup of order 3
     case "2048S224V1_S3":
         c.Make2048_S224_V1()
@@ -885,13 +932,19 @@ func (c *Config) MakeConfig(configString string) (err error) {
     case "2048S224V2_S3":
         c.Make2048_S224_V2()
         c.KexValue = append([]byte{}, KEX_DH_2048_S224_S3...)
-    // 0
-    case "2048S224V1_0":
-        c.Make2048_S224_V1()
-        c.KexValue = make([]byte, 256)
-    case "2048S224V2_0":
-        c.Make2048_S224_V2()
-        c.KexValue = make([]byte, 256)
+    // subgroup of order 7
+    case "1024S160V1_S7":
+        c.Make1024_S160_V1()
+        c.KexValue = append([]byte{}, KEX_DH_1024_S160_S7...)
+    case "1024S160V2_S7":
+        c.Make1024_S160_V2()
+        c.KexValue = append([]byte{}, KEX_DH_1024_S160_S7...)
+    case "2048S256V1_S7":
+        c.Make2048_S256_V1()
+        c.KexValue = append([]byte{}, KEX_DH_2048_S256_S7...)
+    case "2048S256V2_S7":
+        c.Make2048_S256_V2()
+        c.KexValue = append([]byte{}, KEX_DH_2048_S256_S7...)
     default:
         err = json.Unmarshal([]byte(configString), c)
     }
