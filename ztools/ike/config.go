@@ -11,7 +11,7 @@ func uint16ToBytes(num uint16) []byte {
     return []byte{uint8(num >> 8), uint8(num)}
 }
 
-func (c *Config) MakeBaselineV1() {
+func (c *Config) MakeBASELINE_V1() {
     c.Version = VersionIKEv1
     c.DhGroup = DH_1024_V1
     c.ExchangeType = IDENTITY_PROTECTION_V1 // main mode
@@ -152,7 +152,7 @@ func (c *Config) MakeBaselineV1() {
     }
 }
 
-func (c *Config) MakeBaselineV2() {
+func (c *Config) MakeBASELINE_V2() {
     c.Version = VersionIKEv2
     c.DhGroup = DH_1024_V2
     c.Proposals = []ProposalConfig {
@@ -202,7 +202,7 @@ func (c *Config) MakeBaselineV2() {
     }
 }
 
-func (c *Config) MakeFortiGateV1() {
+func (c *Config) MakeFORTIGATE_V1() {
     c.Version = VersionIKEv1
     c.DhGroup = DH_1536_V1
     c.ExchangeType = IDENTITY_PROTECTION_V1 // main mode
@@ -836,16 +836,256 @@ func (c *Config) Make2048_S256_V2() {
     }
 }
 
+func (c *Config) MakeECDH_BASELINE_V1() {
+    c.Version = VersionIKEv1
+    c.DhGroup = DH_256_ECP_V1
+    c.ExchangeType = IDENTITY_PROTECTION_V1 // main mode
+    c.Proposals = []ProposalConfig {
+        {ProposalNum: 1, Transforms: []TransformConfig {
+            // AES-CBC-128, SHA1, DH_224_ECP, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(128),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_224_ECP_V1),},
+                },
+            },
+            // AES-CBC-224, SHA1, DH_224_ECP, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(224),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_224_ECP_V1),},
+                },
+            },
+            // AES-CBC-128, SHA1, DH_256_ECP, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(128),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_256_ECP_V1),},
+                },
+            },
+            // AES-CBC-256, SHA1, DH_256_ECP, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(256),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_256_ECP_V1),},
+                },
+            },
+            // AES-CBC-128, SHA1, DH_256_BRAINPOOL, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(128),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_256_BRAINPOOL_V1),},
+                },
+            },
+            // AES-CBC-256, SHA1, DH_256_BRAINPOOL, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(256),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_224_BRAINPOOL_V1),},
+                },
+            },
+        },},
+    }
+}
+
+func (c *Config) Make224_ECP_V1() {
+    c.Version = VersionIKEv1
+    c.DhGroup = DH_224_ECP_V1
+    c.ExchangeType = IDENTITY_PROTECTION_V1 // main mode
+    c.Proposals = []ProposalConfig {
+        {ProposalNum: 1, Transforms: []TransformConfig {
+            // AES-CBC-128, SHA1, DH_224_ECP, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(128),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_224_ECP_V1),},
+                },
+            },
+            // AES-CBC-256, SHA1, DH_224_ECP, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(256),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_224_ECP_V1),},
+                },
+            },
+        },},
+    }
+}
+
+func (c *Config) Make256_BRAINPOOL_V1() {
+    c.Version = VersionIKEv1
+    c.DhGroup = DH_256_BRAINPOOL_V1
+    c.ExchangeType = IDENTITY_PROTECTION_V1 // main mode
+    c.Proposals = []ProposalConfig {
+        {ProposalNum: 1, Transforms: []TransformConfig {
+            // AES-CBC-128, SHA1, DH_256_BRAINPOOL, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(128),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_256_BRAINPOOL_V1),},
+                },
+            },
+            // AES-CBC-256, SHA1, DH_256_BRAINPOOL, PSK
+            {IdV1: KEY_IKE_V1, Attributes: []AttributeConfig {
+                {Type: KEY_LENGTH_V1, Value: uint16ToBytes(256),},
+                {Type: ENCRYPTION_ALGORITHM_V1, Value: uint16ToBytes(ENCR_AES_CBC_V1),},
+                {Type: HASH_ALGORITHM_V1, Value: uint16ToBytes(SHA_V1),},
+                {Type: AUTHENTICATION_METHOD_V1, Value: uint16ToBytes(PRE_SHARED_KEY_V1),},
+                {Type: GROUP_DESCRIPTION_V1, Value: uint16ToBytes(DH_224_BRAINPOOL_V1),},
+                },
+            },
+        },},
+    }
+}
+
+func (c *Config) MakeECDH_BASELINE_V2() {
+    c.Version = VersionIKEv2
+    c.DhGroup = DH_256_ECP_V2
+    c.Proposals = []ProposalConfig {
+        {ProposalNum: 1, Transforms: []TransformConfig {
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_GCM_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(256),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_GCM_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(192),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_GCM_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(128),},}},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_512_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_384_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_256_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA1_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_MD5_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_NONE_V2,},
+            {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_224_ECP_V2,},
+            {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_256_ECP_V2,},
+            {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_384_ECP_V2,},
+            {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_256_BRAINPOOL_V2,},
+            },
+        },
+        {ProposalNum: 2, Transforms: []TransformConfig {
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(256),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(192),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(128),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_3DES_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_512_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_384_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_256_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA1_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_MD5_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA2_512_256_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA2_384_192_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA2_256_128_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA1_96_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_MD5_96_V2,},
+            {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_224_ECP_V2,},
+            {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_256_ECP_V2,},
+            {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_384_ECP_V2,},
+            {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_256_BRAINPOOL_V2,},
+            },
+        },
+    }
+}
+
+func (c *Config) Make224_ECP_V2() {
+    c.Version = VersionIKEv2
+    c.DhGroup = DH_224_ECP_V2
+    c.Proposals = []ProposalConfig {
+        {ProposalNum: 1, Transforms: []TransformConfig {
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_GCM_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(256),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_GCM_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(192),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_GCM_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(128),},}},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_512_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_384_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_256_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA1_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_MD5_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_NONE_V2,},
+            {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_224_ECP_V2,},
+            },
+        },
+        {ProposalNum: 2, Transforms: []TransformConfig {
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(256),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(192),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(128),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_3DES_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_512_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_384_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_256_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA1_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_MD5_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA2_512_256_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA2_384_192_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA2_256_128_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA1_96_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_MD5_96_V2,},
+            {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_224_ECP_V2,},
+            },
+        },
+    }
+}
+
+func (c *Config) Make256_BRAINPOOL_V2() {
+    c.Version = VersionIKEv2
+    c.DhGroup = DH_256_BRAINPOOL_V2
+    c.Proposals = []ProposalConfig {
+        {ProposalNum: 1, Transforms: []TransformConfig {
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_GCM_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(256),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_GCM_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(192),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_GCM_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(128),},}},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_512_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_384_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_256_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA1_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_MD5_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_NONE_V2,},
+            {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_256_BRAINPOOL_V2,},
+            },
+        },
+        {ProposalNum: 2, Transforms: []TransformConfig {
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(256),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(192),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(128),},}},
+            {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_3DES_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_512_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_384_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_256_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA1_V2,},
+            {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_MD5_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA2_512_256_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA2_384_192_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA2_256_128_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA1_96_V2,},
+            {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_MD5_96_V2,},
+            {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_256_BRAINPOOL_V2,},
+            },
+        },
+    }
+}
+
 
 func (c *Config) MakeConfig(configString string) (err error) {
     configString = strings.ToUpper(configString)
     switch configString {
     case "":
-        c.MakeBaselineV1()
+        c.MakeBASELINE_V1()
     case "BASELINEV1":
-        c.MakeBaselineV1()
+        c.MakeBASELINE_V1()
     case "BASELINEV2":
-        c.MakeBaselineV2()
+        c.MakeBASELINE_V2()
     case "1024S160V1":
         c.Make1024_S160_V1()
     case "2048S224V1":
@@ -859,7 +1099,7 @@ func (c *Config) MakeConfig(configString string) (err error) {
     case "2048S256V2":
         c.Make2048_S256_V2()
     case "FORTIGATEV1":
-        c.MakeFortiGateV1()
+        c.MakeFORTIGATE_V1()
 
     // check if host validates subgroup order
     // 1
@@ -945,6 +1185,34 @@ func (c *Config) MakeConfig(configString string) (err error) {
     case "2048S256V2_S7":
         c.Make2048_S256_V2()
         c.KexValue = append([]byte{}, KEX_DH_2048_S256_S7...)
+
+    // elliptic curve configs
+    // V1
+    case "ECDH_BASELINE_V1":
+        c.MakeECDH_BASELINE_V1()
+    case "224_ECP_V1":
+        c.Make224_ECP_V1()
+    case "224_ECP_INVALID_S13_V1":
+        c.KexValue = KEX_224_ECP_INVALID_S13
+        c.Make224_ECP_V1()
+    case "224_ECP_TWIST_S11_V1":
+        c.KexValue = KEX_224_ECP_TWIST_S11
+        c.Make224_ECP_V1()
+    case "256_BRAINPOOL_V1":
+        c.Make256_BRAINPOOL_V1()
+    // V2
+    case "ECDH_BASELINE_V2":
+        c.MakeECDH_BASELINE_V2()
+    case "224_ECP_V2":
+        c.Make224_ECP_V2()
+    case "224_ECP_INVALID_S13_V2":
+        c.KexValue = KEX_224_ECP_INVALID_S13
+        c.Make224_ECP_V2()
+    case "224_ECP_TWIST_S11_V2":
+        c.KexValue = KEX_224_ECP_TWIST_S11
+        c.Make224_ECP_V2()
+    case "256_BRAINPOOL_V2":
+        c.Make256_BRAINPOOL_V2()
     default:
         err = json.Unmarshal([]byte(configString), c)
     }
