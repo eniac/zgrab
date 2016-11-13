@@ -311,6 +311,9 @@ type Config struct {
 	// which is currently TLS 1.2.
 	MaxVersion uint16
 
+    // Extra configuration options for TLS kex exchange values
+    TLSKexConfig string
+
 	// CurvePreferences contains the elliptic curves that will be used in
 	// an ECDHE handshake, in preference order. If empty, the default will
 	// be used.

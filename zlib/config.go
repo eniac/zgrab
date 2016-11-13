@@ -107,6 +107,7 @@ type Config struct {
 
 	// TLS
 	TLS                  bool
+    TLSKexConfig         string
 	TLSVersion           uint16
 	Heartbleed           bool
 	RootCAPool           *x509.CertPool

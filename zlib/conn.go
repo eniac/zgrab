@@ -55,6 +55,9 @@ type Conn struct {
 
 	grabData GrabData
 
+    // TLS Key Exchange Config
+    TLSKexConfig string
+
 	// Max TLS version
 	maxTlsVersion uint16
 
@@ -289,6 +292,7 @@ func (c *Conn) TLSHandshake() error {
 	tlsConfig.InsecureSkipVerify = true
 	tlsConfig.MinVersion = ztls.VersionSSL30
 	tlsConfig.MaxVersion = c.maxTlsVersion
+    tlsConfig.TLSKexConfig = c.TLSKexConfig
 	tlsConfig.RootCAs = c.caPool
 	tlsConfig.HeartbeatEnabled = true
 	tlsConfig.ClientDSAEnabled = true
