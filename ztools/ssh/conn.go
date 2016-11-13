@@ -16,6 +16,7 @@ package ssh
 
 import (
 	"bytes"
+	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/binary"
 	"errors"
@@ -23,6 +24,8 @@ import (
 	"net"
 	"regexp"
 	"strconv"
+
+	"github.com/keybase/go-crypto/brainpool"
 )
 
 type Conn struct {
@@ -174,10 +177,39 @@ ProtocolLoop:
 		if err := c.dhGroupExchange(); err != nil {
 			return err
 		}
+	case KEX_CURVE_25519_SHA256_OPENSSH, KEX_ECDH_SHA2_NISTP224, KEX_ECDH_SHA2_NISTP256, KEX_ECDH_SHA2_NISTP384, KEX_ECDH_SHA2_NISTP521:
+		if curve, ok := curveForCurveID(c.kexAlgorithm); ok {
+			params := ECDHParams{
+				SSHCurveID: c.kexAlgorithm,
+				Curve:      curve,
+			}
+			if err := c.ecdhExchange(&params); err != nil {
+				return err
+			}
+		}
 	default:
 		return errors.New("unimplemented kex method")
 	}
 	return nil
+}
+
+func curveForCurveID(id string) (elliptic.Curve, bool) {
+	switch id {
+	case KEX_CURVE_25519_SHA256_OPENSSH:
+		return Curve25519(), true
+	case KEX_ECDH_SHA2_BRAINPOOLP256:
+		return brainpool.P256r1(), true
+	case KEX_ECDH_SHA2_NISTP224:
+		return elliptic.P224(), true
+	case KEX_ECDH_SHA2_NISTP256:
+		return elliptic.P256(), true
+	case KEX_ECDH_SHA2_NISTP384:
+		return elliptic.P384(), true
+	case KEX_ECDH_SHA2_NISTP521:
+		return elliptic.P521(), true
+	default:
+		return nil, false
+	}
 }
 
 func (c *Conn) HandshakeLog() *HandshakeLog {
@@ -348,6 +380,65 @@ func (c *Conn) dhGroupExchange() error {
 	return nil
 }
 
+func (c *Conn) ecdhExchange(params *ECDHParams) error {
+	var err error
+	var mx, my *big.Int
+	if params.Curve.Params().Name == "Curve25519" {
+		mx, _ = new(big.Int).SetString("12519297798344875305557292433671964860635190053244199321010304085384576550016", 10)
+		my, _ = new(big.Int).SetString("53030773923266012872098459210235568541521178854109831464468498685054132916945", 10)
+	} else {
+		_, mx, my, err = elliptic.GenerateKey(params.Curve, c.config.getRandom())
+		if err != nil {
+			return err
+		}
+	}
+	switch c.config.KexConfig {
+	case "224_ECP_TWIST_S11":
+		// NIST-P224 generator of subgroup of order 11 on twist
+		mx, _ = new(big.Int).SetString("21219928721835262216070635629075256199931199995500865785214182108232", 10)
+		my, _ = new(big.Int).SetString("2486431965114139990348241493232938533843075669604960787364227498903", 10)
+	case "224_ECP_INVALID_S13":
+		// NIST-P224 generator of subgroup of order 13 on curve w/ B-1
+		mx, _ = new(big.Int).SetString("1234919426772886915432358412587735557527373236174597031415308881584", 10)
+		my, _ = new(big.Int).SetString("218592750580712164156183367176268299828628545379017213517316023994", 10)
+	case "256_ECP_TWIST_S5":
+		// NIST-P256 generator of subgroup of order 5 on twist
+		// y^2 = x^3 + 64540953657701435357043644561909631465859193840763101878720769919119982834454*x + 21533133778103722695369883733312533132949737997864576898233410179589774724054
+		mx, _ = new(big.Int).SetString("75610932410248387784210576211184530780201393864652054865721797292564276389325", 10)
+		my, _ = new(big.Int).SetString("30046858919395540206086570437823256496220553255320964836453418613861962163895", 10)
+	case "256_ECP_INVALID_S5":
+		// NIST-P256 generator of subgroup of order 5 on curve w/ B-1
+		mx, _ = new(big.Int).SetString("86765160823711241075790919525606906052464424178558764461827806608937748883041", 10)
+		my, _ = new(big.Int).SetString("62096069626295534024197897036720226401219594482857127378802405572766226928611", 10)
+	case "CURVE25519_S2":
+		// Curve25519 generator of subgroup of order 2
+		mx, _ = new(big.Int).SetString("19298681539552699237261830834781317975544997444273427339909597334652188435537", 10)
+		my, _ = new(big.Int).SetString("0", 10)
+	default:
+		if len(c.config.KexConfig) > 0 {
+			panic(c.config.KexConfig)
+		}
+	}
+	ecdhi := new(KeyExchangeECDHInit)
+	if params.Curve.Params().Name == "Curve25519" {
+		_ = my
+		mp := new(mpint)
+		mp.SetBytes(mx.Bytes()) // convert between big.Int and mpint
+		ecdhi.Q_C, _ = mp.Marshal()
+	} else {
+		ecdhi.Q_C = elliptic.Marshal(params.Curve, mx, my)
+	}
+	c.handshakeLog.ECDHInit = ecdhi
+	c.writePacket(ecdhi)
+	ecdhReply := new(KeyExchangeECDHInitReply)
+	if err = c.readPacket(ecdhReply); err != nil {
+		return err
+	}
+
+	c.handshakeLog.ECDHReply = ecdhReply
+	return nil
+}
+
 func (c *Conn) dhExchange(params *DHParams) error {
 	dhi := new(KeyExchangeDHInit)
 	if len(c.config.KexValue) > 0 {
@@ -364,6 +455,7 @@ func (c *Conn) dhExchange(params *DHParams) error {
 		E.Exp(params.Generator, x, params.Prime)
 		dhi.E.Set(E)
 	}
+	c.handshakeLog.DHInit = dhi
 	c.writePacket(dhi)
 	dhReply := new(KeyExchangeDHInitReply)
 	if err := c.readPacket(dhReply); err != nil {

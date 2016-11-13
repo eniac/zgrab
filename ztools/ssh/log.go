@@ -28,6 +28,8 @@ type HandshakeLog struct {
 	KexDHGroupReply       *KeyExchangeDHGroupReply      `json:"key_exchange_dh_group_reply,omitempty"`
 	DHInit                *KeyExchangeDHInit            `json:"key_exchange_dh_init,omitempty"`
 	DHReply               *KeyExchangeDHInitReply       `json:"key_exchange_dh_reply,omitempty"`
+	ECDHInit              *KeyExchangeECDHInit          `json:"key_exchange_ecdh_init,omitempty"`
+	ECDHReply             *KeyExchangeECDHInitReply     `json:"key_exchange_ecdh_reply,omitempty"`
 }
 
 type AlgorithmSelection struct {

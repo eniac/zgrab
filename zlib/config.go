@@ -43,6 +43,7 @@ type SSHScanConfig struct {
 	FixedKexValue     string
 	FixedKexBytes     []byte
 	NegativeOne       bool
+	KexConfig         string
 }
 
 func (sc *SSHScanConfig) GetClientImplementation() (*ssh.ClientImplementation, bool) {
@@ -89,6 +90,7 @@ func (sc *SSHScanConfig) MakeConfig() *ssh.Config {
 	config.HostKeyAlgorithms, _ = sc.MakeHostKeyNameList()
 	config.KexValue = sc.FixedKexBytes
 	config.NegativeOne = sc.NegativeOne
+	config.KexConfig = sc.KexConfig
 	return config
 }
 

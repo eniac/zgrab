@@ -44,6 +44,8 @@ const (
 	SSH_MSG_KEXINIT                byte = 20
 	SSH_MSG_KEXDH_INIT             byte = 30
 	SSH_MSG_KEXDH_REPLY            byte = 31
+	SSH_MSG_KEXECDH_INIT           byte = 30
+	SSH_MSG_KEXECDH_REPLY          byte = 31
 	SSH_MSG_KEX_DH_GEX_REQUEST_OLD byte = 30
 	SSH_MSG_KEY_DH_GEX_REQUEST     byte = 34
 	SSH_MSG_KEX_DH_GEX_GROUP       byte = 31
@@ -52,6 +54,7 @@ const (
 )
 
 type Config struct {
+	KexConfig                 string
 	KexAlgorithms             NameList
 	HostKeyAlgorithms         NameList
 	EncryptionClientToServer  NameList

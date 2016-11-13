@@ -348,6 +348,101 @@ func (dhr *KeyExchangeDHInitReply) Unmarshal(raw []byte) bool {
 	return true
 }
 
+// KeyExchangeECDHInit represent the SSH_MSG_KEXECDH_INIT message for transferring
+// Elliptic Curve Diffie-Hellman public values. See RFC 5656 Section 4.
+type KeyExchangeECDHInit struct {
+	raw []byte
+	Q_C []byte
+}
+
+// MsgType returns the SSH_MSG_KEXECDH_INIT message type
+func (ecdhi *KeyExchangeECDHInit) MsgType() byte {
+	return SSH_MSG_KEXECDH_INIT
+}
+
+// Marshal encodes a KeyExchangeECDHInit message payload
+func (ecdhi *KeyExchangeECDHInit) Marshal() ([]byte, error) {
+	if ecdhi.raw != nil {
+		return ecdhi.raw, nil
+	}
+	e := ecdhi.Q_C
+	out := make([]byte, 4+len(e))
+	binary.BigEndian.PutUint32(out, uint32(len(e)))
+	copy(out[4:], e)
+	return out, nil
+}
+
+func (ecdhi *KeyExchangeECDHInit) Unmarshal(raw []byte) bool {
+	b := raw
+	if len(b) < 4 {
+		return false
+	}
+	length := binary.BigEndian.Uint32(b)
+	b = b[4:]
+	if uint32(len(b)) != length {
+		return false
+	}
+	ecdhi.Q_C = b[0:length]
+	ecdhi.raw = raw
+	return true
+}
+
+type KeyExchangeECDHInitReply struct {
+	raw []byte
+
+	K_S       []byte `json:"k_s"`
+	Q_S       []byte `json:"Q_S"`
+	Signature []byte `json:"signature"`
+}
+
+func (ecdhr *KeyExchangeECDHInitReply) MsgType() byte {
+	return SSH_MSG_KEXECDH_REPLY
+}
+
+func (ecdhr *KeyExchangeECDHInitReply) Marshal() ([]byte, error) {
+	return nil, errors.New("unimplemented")
+}
+
+func (ecdhr *KeyExchangeECDHInitReply) Unmarshal(raw []byte) bool {
+	b := raw
+	if len(b) < 4 {
+		return false
+	}
+	ksLength := binary.BigEndian.Uint32(b)
+	b = b[4:]
+	if ksLength > uint32(len(b)) {
+		return false
+	}
+	ecdhr.K_S = make([]byte, ksLength)
+	copy(ecdhr.K_S, b[0:ksLength])
+	b = b[ksLength:]
+	if len(b) < 4 {
+		return false
+	}
+	qsLength := binary.BigEndian.Uint32(b)
+	b = b[4:]
+	if qsLength > uint32(len(b)) {
+		return false
+	}
+	ecdhr.Q_S = b[0:qsLength]
+	b = b[qsLength:]
+	if len(b) < 4 {
+		return false
+	}
+	sigLength := binary.BigEndian.Uint32(b)
+	b = b[4:]
+	if sigLength > uint32(len(b)) {
+		return false
+	}
+	ecdhr.Signature = make([]byte, sigLength)
+	copy(ecdhr.Signature, b[0:sigLength])
+	b = b[sigLength:]
+	if len(b) > 0 {
+		return false
+	}
+	return true
+}
+
 /*
 byte    SSH_MSG_KEY_DH_GEX_REQUEST
 uint32  min, minimal size in bits of an acceptable group

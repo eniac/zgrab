@@ -22,6 +22,8 @@ import (
 // SSH key exchange types
 const (
 	KEX_CURVE_25519_SHA256_OPENSSH = "curve25519-sha256@libssh.org"
+	KEX_ECDH_SHA2_NISTP224         = "ecdh-sha2-1.3.132.0.33"
+	KEX_ECDH_SHA2_BRAINPOOLP256    = "ecdh-sha2-1.3.36.3.3.2.8.1.1.7" //https://www.flexiprovider.de/CurveOIDs.html
 	KEX_ECDH_SHA2_NISTP256         = "ecdh-sha2-nistp256"
 	KEX_ECDH_SHA2_NISTP384         = "ecdh-sha2-nistp384"
 	KEX_ECDH_SHA2_NISTP521         = "ecdh-sha2-nistp521"
@@ -104,9 +106,11 @@ const (
 // package. All key exchange methods are not necessarily implemented.
 var KnownKexAlgorithmNames = []string{
 	KEX_CURVE_25519_SHA256_OPENSSH,
+	KEX_ECDH_SHA2_NISTP224,
 	KEX_ECDH_SHA2_NISTP256,
 	KEX_ECDH_SHA2_NISTP384,
 	KEX_ECDH_SHA2_NISTP521,
+	KEX_ECDH_SHA2_BRAINPOOLP256,
 	KEX_DH_SHA256,
 	KEX_DH_SHA1,
 	KEX_DH_GROUP14_SHA1,
