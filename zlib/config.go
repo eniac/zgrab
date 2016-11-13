@@ -95,12 +95,13 @@ func (sc *SSHScanConfig) MakeConfig() *ssh.Config {
 
 type IKEScanConfig struct {
     IKE                 bool
+    IKEVersion        string
     ConfigString      string
 }
 
 func (sc *IKEScanConfig) MakeConfig() (config *ike.Config, err error) {
     config = new(ike.Config)
-    err = config.MakeConfig(sc.ConfigString)
+    err = config.MakeConfig(sc.ConfigString, sc.IKEVersion)
     return
 }
 

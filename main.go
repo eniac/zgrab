@@ -127,6 +127,7 @@ func init() {
 	flag.BoolVar(&config.SSH.NegativeOne, "ssh-negative-one", false, "Set SSH DH kex value to -1 in the selected group")
 	flag.BoolVar(&config.IKE.IKE, "ike", false, "IKE scan")
 	flag.StringVar(&config.IKE.ConfigString, "ike-config", "", "IKE configuration to use (implies --ike)")
+    flag.StringVar(&config.IKE.IKEVersion, "ike-version", "", "IKE version (must be '1' or '2', default is '1', implies --ike)")
 	flag.BoolVar(&config.Telnet, "telnet", false, "Read telnet banners")
 	flag.IntVar(&config.TelnetMaxSize, "telnet-max-size", 65536, "Max bytes to read for telnet banner")
 
@@ -161,6 +162,10 @@ func init() {
 			config.SSH.FixedKexBytes = append([]byte{0x00}, b...)
 		}
 	}
+
+    if config.IKE.IKEVersion != "" {
+        config.IKE.IKE = true
+    }
 
     if config.IKE.ConfigString != "" {
         config.IKE.IKE = true

@@ -75,7 +75,7 @@ func (c *Conn) InitiatorHandshakeMain() (err error) {
                     return
                 }
 
-                if _, ok := groupMapV1[c.config.DhGroup]; !ok {
+                if _, ok := groupKexMap[c.config.DhGroup]; !ok {
                     err = errors.New("Unsupported Diffie-Hellman group in responder Security Association")
                     return
                 }
@@ -553,7 +553,8 @@ func (c *Conn) buildPayloadKeyExchangeV1() (p *payloadKeyExchangeV1) {
         p.keyExchangeData = append(p.keyExchangeData, c.config.KexValue...)
         return
     }
-    if val, ok := groupMapV1[c.config.DhGroup]; ok {
+    // TODO: generate random key here
+    if val, ok := groupKexMap[c.config.DhGroup]; ok {
         p.keyExchangeData = append(p.keyExchangeData, val...)
     } else {
         zlog.Fatalf("unsupported group: %d", c.config.DhGroup)
@@ -568,7 +569,8 @@ func (c *Conn) buildPayloadKeyExchangeV2() (p *payloadKeyExchangeV2) {
         p.keyExchangeData = append(p.keyExchangeData, c.config.KexValue...)
         return
     }
-    if val, ok := groupMapV2[c.config.DhGroup]; ok {
+    // TODO: generate random key here
+    if val, ok := groupKexMap[c.config.DhGroup]; ok {
         p.keyExchangeData = append(p.keyExchangeData, val...)
     } else {
         zlog.Fatalf("unsupported group: %d", p.dhGroup)
