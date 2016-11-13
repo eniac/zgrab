@@ -2,7 +2,6 @@ zgrab
 ==================
 
 [![Build Status](https://travis-ci.org/zmap/zgrab.svg?branch=master)](https://travis-ci.org/zmap/zgrab)
-[![Coverage Status](https://coveralls.io/repos/zmap/zgrab/badge.svg?branch=master&service=github)](https://coveralls.io/github/zmap/zgrab?branch=master)
 
 A TLS Banner Grabber, in Go
 
@@ -32,7 +31,7 @@ $ go build
 ## Example
 
 ```
-$ zmap -p 443 --output-fields=* | ztee results.csv | zgrab --port 443 --tls --data=./http-req --output-file=banners.json
+$ zmap -p 443 --output-fields=* | ztee results.csv | zgrab --port 443 --tls --http="/" --output-file=banners.json
 ```
 
 ## Requirements
@@ -42,11 +41,7 @@ zgrab requires go version of at least 1.6. Please note that this is newer than t
 
 ## ZGrab as a library / dependency
 
-If you are using ZGrab code in another Go program, import ZGrab using [gopkg.in](http://gopkg.in). ZGrab tends to be very unstable, API's may break at any time, so use gopkg.in or another go dependency management to lock what version of ZGrab you use.
-
-```
-gopkg.in/zmap/zgrab.v0.0.1
-```
+If you are using ZGrab code in another Go program, import ZGrab using [gopkg.in](http://gopkg.in). ZGrab tends to be very unstable, API's may break at any time, so be sure to vendor ZGrab.
 
 ## License
 

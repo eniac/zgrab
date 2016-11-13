@@ -11,6 +11,7 @@ import (
 	"encoding/asn1"
 	"encoding/json"
 
+	"strings"
 	"time"
 
 	"github.com/asaskevich/govalidator"
@@ -204,10 +205,11 @@ type jsonCertificate struct {
 	FingerprintMD5            CertificateFingerprint       `json:"fingerprint_md5"`
 	FingerprintSHA1           CertificateFingerprint       `json:"fingerprint_sha1"`
 	FingerprintSHA256         CertificateFingerprint       `json:"fingerprint_sha256"`
+	FingerprintNoCT           CertificateFingerprint       `json:"tbs_noct_fingerprint"`
 	SPKISubjectFingerprint    CertificateFingerprint       `json:"spki_subject_fingerprint"`
 	TBSCertificateFingerprint CertificateFingerprint       `json:"tbs_fingerprint"`
 	ValidationLevel           CertValidationLevel          `json:"validation_level"`
-	Names                     []string                     `json:"names"`
+	Names                     []string                     `json:"names,omitempty"`
 }
 
 func (c *Certificate) MarshalJSON() ([]byte, error) {
@@ -218,6 +220,7 @@ func (c *Certificate) MarshalJSON() ([]byte, error) {
 	jc.SignatureAlgorithm = c.SignatureAlgorithm
 	jc.Issuer = c.Issuer
 	jc.IssuerDN = c.Issuer.String()
+
 	jc.Validity.NotBefore = c.NotBefore
 	jc.Validity.NotAfter = c.NotAfter
 	jc.Validity.ValidityPeriod = c.ValidityPeriod
@@ -225,45 +228,38 @@ func (c *Certificate) MarshalJSON() ([]byte, error) {
 	jc.SubjectDN = c.Subject.String()
 	jc.SubjectKeyInfo.KeyAlgorithm = c.PublicKeyAlgorithm
 
-	// Include all subject names, DNS names there are
-	for _, obj := range c.Subject.Names {
-
-		switch name := obj.Value.(type) {
-		case string:
-
-			flag := false
-
-			if len(name) > 2 && name[0] == '*' {
-				flag = govalidator.IsURL(name[2:])
-			} else {
-				flag = govalidator.IsURL(name)
-			}
-
-			// Check that this is actually a url and not something else
-			if flag {
-				jc.Names = append(jc.Names, name)
-			}
-		}
+	if isValidName(c.Subject.CommonName) {
+		jc.Names = append(jc.Names, c.Subject.CommonName)
 	}
 
 	for _, name := range c.DNSNames {
-
-		flag := false
-
-		if len(name) > 2 && name[0] == '*' {
-			flag = govalidator.IsURL(name[2:])
-		} else {
-			flag = govalidator.IsURL(name)
+		if isValidName(name) {
+			jc.Names = append(jc.Names, name)
+		} else if !strings.Contains(name, ".") { //just a TLD
+			jc.Names = append(jc.Names, name)
 		}
 
-		if flag {
+	}
+
+	for _, name := range c.URIs {
+		if govalidator.IsURL(name) {
 			jc.Names = append(jc.Names, name)
 		}
 	}
 
+	for _, name := range c.IPAddresses {
+		str := name.String()
+		if govalidator.IsURL(str) {
+			jc.Names = append(jc.Names, str)
+		}
+	}
+
+	jc.Names = purgeNameDuplicates(jc.Names)
+
 	// Pull out the key
 	keyMap := make(map[string]interface{})
 
+	jc.SubjectKeyInfo.SPKIFingerprint = c.SPKIFingerprint
 	switch key := c.PublicKey.(type) {
 	case *rsa.PublicKey:
 		rsaKey := new(keys.RSAPublicKey)
@@ -299,7 +295,7 @@ func (c *Certificate) MarshalJSON() ([]byte, error) {
 		keyMap["x"] = pub.X.Bytes()
 		keyMap["y"] = pub.Y.Bytes()
 
-		keyMap["asn1_oid"] = c.SignatureAlgorithmOID
+		//keyMap["asn1_oid"] = c.SignatureAlgorithmOID.String()
 
 		jc.SubjectKeyInfo.ECDSAPublicKey = keyMap
 	}
@@ -316,9 +312,37 @@ func (c *Certificate) MarshalJSON() ([]byte, error) {
 	jc.FingerprintMD5 = c.FingerprintMD5
 	jc.FingerprintSHA1 = c.FingerprintSHA1
 	jc.FingerprintSHA256 = c.FingerprintSHA256
+	jc.FingerprintNoCT = c.FingerprintNoCT
 	jc.SPKISubjectFingerprint = c.SPKISubjectFingerprint
 	jc.TBSCertificateFingerprint = c.TBSCertificateFingerprint
 	jc.ValidationLevel = c.ValidationLevel
 
 	return json.Marshal(jc)
+}
+
+func purgeNameDuplicates(names []string) (out []string) {
+	hashset := make(map[string]bool, len(names))
+	for _, name := range names {
+		if _, inc := hashset[name]; !inc {
+			hashset[name] = true
+		}
+	}
+
+	out = make([]string, 0, len(hashset))
+	for key, _ := range hashset {
+		out = append(out, key)
+	}
+	return
+}
+
+func isValidName(name string) (ret bool) {
+
+	// Check for wildcards and redacts, ignore malformed urls
+	if strings.HasPrefix(name, "?.") || strings.HasPrefix(name, "*.") {
+		ret = govalidator.IsURL(name[2:])
+	} else {
+		ret = govalidator.IsURL(name)
+	}
+
+	return
 }

@@ -137,6 +137,8 @@ type ScannerOptions struct {
 
 	// The name of the CT server we're pulling certs from
 	Name string
+
+	MaximumIndex int64
 }
 
 // Creates a new ScannerOptions struct with sensible defaults
@@ -150,6 +152,7 @@ func DefaultScannerOptions() *ScannerOptions {
 		StartIndex:    0,
 		Quiet:         false,
 		Name:          "https://ct.googleapis.com/rocketeer",
+		MaximumIndex:  0,
 	}
 }
 
@@ -202,10 +205,10 @@ func (s *Scanner) handleParseEntryError(err error, entryType ct.LogEntryType, in
 	case x509.NonFatalErrors:
 		s.entriesWithNonFatalErrors++
 		// We'll make a note, but continue.
-		s.LogWarn(fmt.Sprintf("Non-fatal error in %+v at index %d: %s", entryType, index, err.Error()))
+		s.LogWarn(fmt.Sprintf("Non-fatal error in %+v at index %d of log at %s: %s", entryType, index, s.logClient.Uri, err.Error()))
 	default:
 		s.unparsableEntries++
-		s.LogError(fmt.Sprintf("Failed to parse in %+v at index %d : %s", entryType, index, err.Error()))
+		s.LogError(fmt.Sprintf("Failed to parse in %+v at index %d of log at %s: %s", entryType, index, s.logClient.Uri, err.Error()))
 		return err
 	}
 	return nil
@@ -272,6 +275,14 @@ func (s *Scanner) fetcherJob(id int, ranges <-chan fetchRange, entries chan<- ma
 			logEntries, err := s.logClient.GetEntries(r.start, r.end)
 			if err != nil {
 				s.Log(fmt.Sprintf("Problem fetching from log: %s", err.Error()))
+				if err.Error() == "HTTP error: 500 Internal Server Error" {
+					time.Sleep(500 * time.Millisecond)
+				}
+				continue
+			}
+			if len(logEntries) == 0 {
+				s.Log(fmt.Sprintf("Log %s gave empty slice of certificates for range %d-%d", s.logClient.Uri, r.start, r.end))
+				time.Sleep(500 * time.Millisecond)
 				continue
 			}
 			for _, logEntry := range logEntries {
@@ -370,6 +381,11 @@ func (s *Scanner) Scan(foundCert func(*ct.LogEntry, string),
 	}
 	s.Log(fmt.Sprintf("Got %s STH with %d certs", s.opts.Name, latestSth.TreeSize))
 
+	stopIndex := s.opts.MaximumIndex
+	if s.opts.MaximumIndex == 0 {
+		stopIndex = int64(latestSth.TreeSize)
+	}
+
 	ticker := time.NewTicker(time.Second)
 	startTime := time.Now()
 	fetches := make(chan fetchRange, 1000)
@@ -380,10 +396,10 @@ func (s *Scanner) Scan(foundCert func(*ct.LogEntry, string),
 		for range ticker.C {
 
 			throughput := float64(s.certsProcessed) / time.Since(startTime).Seconds()
-			remainingCerts := int64(latestSth.TreeSize) - int64(s.opts.StartIndex) - s.certsProcessed
+			remainingCerts := int64(stopIndex) - int64(s.opts.StartIndex) - s.certsProcessed
 
 			if remainingCerts == 0 {
-				updater <- int64(latestSth.TreeSize)
+				updater <- int64(stopIndex)
 				return
 			}
 
@@ -392,13 +408,13 @@ func (s *Scanner) Scan(foundCert func(*ct.LogEntry, string),
 			s.Log(fmt.Sprintf("Processed: %d %s certs (to index %d). Throughput: %3.2f ETA: %s\n", s.certsProcessed, s.opts.Name,
 				s.opts.StartIndex+int64(s.certsProcessed), throughput, remainingString))
 
-			updater <- int64(latestSth.TreeSize) - remainingCerts
+			updater <- int64(stopIndex) - remainingCerts
 		}
 	}()
 
 	var ranges list.List
-	for start := s.opts.StartIndex; start < int64(latestSth.TreeSize); {
-		end := min(start+int64(s.opts.BatchSize), int64(latestSth.TreeSize)) - 1
+	for start := s.opts.StartIndex; start < int64(stopIndex); {
+		end := min(start+int64(s.opts.BatchSize), int64(stopIndex)) - 1
 		ranges.PushBack(fetchRange{start, end})
 		start = end + 1
 	}
@@ -421,6 +437,7 @@ func (s *Scanner) Scan(foundCert func(*ct.LogEntry, string),
 	fetcherWG.Wait()
 	close(jobs)
 	matcherWG.Wait()
+	ticker.Stop()
 
 	s.Log(fmt.Sprintf("Completed %d %s certs in %s", s.certsProcessed, s.opts.Name, humanTime(int(time.Since(startTime).Seconds()))))
 	s.Log(fmt.Sprintf("Saw %d precerts", s.precertsSeen))

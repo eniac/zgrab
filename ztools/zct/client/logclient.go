@@ -6,6 +6,7 @@ package client
 import (
 	"bytes"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -15,10 +16,9 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-	"crypto/tls"
 
-	"github.com/zmap/zgrab/ztools/zct"
 	"github.com/mreiferson/go-httpclient"
+	"github.com/zmap/zgrab/ztools/zct"
 	"golang.org/x/net/context"
 )
 
@@ -33,7 +33,7 @@ const (
 
 // LogClient represents a client for a given CT Log instance
 type LogClient struct {
-	uri        string       // the base URI of the log. e.g. http://ct.googleapis/pilot
+	Uri        string       // the base URI of the log. e.g. http://ct.googleapis/pilot
 	httpClient *http.Client // used to interact with the log via HTTP
 }
 
@@ -112,14 +112,14 @@ type getEntryAndProofResponse struct {
 // http://ct.googleapis.com/pilot
 func New(uri string) *LogClient {
 	var c LogClient
-	c.uri = uri
+	c.Uri = uri
 	transport := &httpclient.Transport{
 		ConnectTimeout:        10 * time.Second,
 		RequestTimeout:        30 * time.Second,
 		ResponseHeaderTimeout: 30 * time.Second,
 		MaxIdleConnsPerHost:   10,
 		DisableKeepAlives:     false,
-		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 	}
 	c.httpClient = &http.Client{Transport: transport}
 	return &c
@@ -136,6 +136,9 @@ func (c *LogClient) fetchAndParse(uri string, res interface{}) error {
 	resp, err := c.httpClient.Do(req)
 	var body []byte
 	if resp != nil {
+		if resp.StatusCode > 399 {
+			return errors.New("HTTP error: " + resp.Status)
+		}
 		body, err = ioutil.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
@@ -146,6 +149,7 @@ func (c *LogClient) fetchAndParse(uri string, res interface{}) error {
 		return err
 	}
 	if err = json.Unmarshal(body, &res); err != nil {
+		fmt.Println(string(body))
 		return err
 	}
 	return nil
@@ -204,13 +208,14 @@ func backoffForRetry(ctx context.Context, d time.Duration) error {
 // Attempts to add |chain| to the log, using the api end-point specified by
 // |path|. If provided context expires before submission is complete an
 // error will be returned.
-func (c *LogClient) addChainWithRetry(ctx context.Context, path string, chain []ct.ASN1Cert) (*ct.SignedCertificateTimestamp, error) {
+func (c *LogClient) addChainWithRetry(ctx context.Context, path string, chain []ct.ASN1Cert) (*ct.SignedCertificateTimestamp, error, int) {
 	var resp addChainResponse
 	var req addChainRequest
 	for _, link := range chain {
 		req.Chain = append(req.Chain, base64.StdEncoding.EncodeToString(link))
 	}
 	httpStatus := "Unknown"
+	httpCode := 0
 	backoffSeconds := 0
 	done := false
 	for !done {
@@ -219,12 +224,12 @@ func (c *LogClient) addChainWithRetry(ctx context.Context, path string, chain []
 		}
 		err := backoffForRetry(ctx, time.Second*time.Duration(backoffSeconds))
 		if err != nil {
-			return nil, err
+			return nil, err, 0
 		}
 		if backoffSeconds > 0 {
 			backoffSeconds = 0
 		}
-		httpResp, errorBody, err := c.postAndParse(c.uri+path, &req, &resp)
+		httpResp, errorBody, err := c.postAndParse(c.Uri+path, &req, &resp)
 		if err != nil {
 			backoffSeconds = 10
 			continue
@@ -243,22 +248,23 @@ func (c *LogClient) addChainWithRetry(ctx context.Context, path string, chain []
 				}
 			}
 		default:
-			return nil, fmt.Errorf("got HTTP Status %s: %s", httpResp.Status, errorBody)
+			return nil, fmt.Errorf("got HTTP Status %s: %s", httpResp.Status, errorBody), httpResp.StatusCode
 		}
 		httpStatus = httpResp.Status
+		httpCode = httpResp.StatusCode
 	}
 
 	rawLogID, err := base64.StdEncoding.DecodeString(resp.ID)
 	if err != nil {
-		return nil, err
+		return nil, err, httpCode
 	}
 	rawSignature, err := base64.StdEncoding.DecodeString(resp.Signature)
 	if err != nil {
-		return nil, err
+		return nil, err, httpCode
 	}
 	ds, err := ct.UnmarshalDigitallySigned(bytes.NewReader(rawSignature))
 	if err != nil {
-		return nil, err
+		return nil, err, httpCode
 	}
 	var logID ct.SHA256Hash
 	copy(logID[:], rawLogID)
@@ -267,22 +273,22 @@ func (c *LogClient) addChainWithRetry(ctx context.Context, path string, chain []
 		LogID:      logID,
 		Timestamp:  resp.Timestamp,
 		Extensions: ct.CTExtensions(resp.Extensions),
-		Signature:  *ds}, nil
+		Signature:  *ds}, nil, httpCode
 }
 
 // AddChain adds the (DER represented) X509 |chain| to the log.
-func (c *LogClient) AddChain(chain []ct.ASN1Cert) (*ct.SignedCertificateTimestamp, error) {
+func (c *LogClient) AddChain(chain []ct.ASN1Cert) (*ct.SignedCertificateTimestamp, error, int) {
 	return c.addChainWithRetry(nil, AddChainPath, chain)
 }
 
 // AddPreChain adds the (DER represented) Precertificate |chain| to the log.
-func (c *LogClient) AddPreChain(chain []ct.ASN1Cert) (*ct.SignedCertificateTimestamp, error) {
+func (c *LogClient) AddPreChain(chain []ct.ASN1Cert) (*ct.SignedCertificateTimestamp, error, int) {
 	return c.addChainWithRetry(nil, AddPreChainPath, chain)
 }
 
 // AddChainWithContext adds the (DER represented) X509 |chain| to the log and
 // fails if the provided context expires before the chain is submitted.
-func (c *LogClient) AddChainWithContext(ctx context.Context, chain []ct.ASN1Cert) (*ct.SignedCertificateTimestamp, error) {
+func (c *LogClient) AddChainWithContext(ctx context.Context, chain []ct.ASN1Cert) (*ct.SignedCertificateTimestamp, error, int) {
 	return c.addChainWithRetry(ctx, AddChainPath, chain)
 }
 
@@ -291,7 +297,7 @@ func (c *LogClient) AddJSON(data interface{}) (*ct.SignedCertificateTimestamp, e
 		Data: data,
 	}
 	var resp addChainResponse
-	_, _, err := c.postAndParse(c.uri+AddJSONPath, &req, &resp)
+	_, _, err := c.postAndParse(c.Uri+AddJSONPath, &req, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +327,7 @@ func (c *LogClient) AddJSON(data interface{}) (*ct.SignedCertificateTimestamp, e
 // Returns a populated SignedTreeHead, or a non-nil error.
 func (c *LogClient) GetSTH() (sth *ct.SignedTreeHead, err error) {
 	var resp getSTHResponse
-	if err = c.fetchAndParse(c.uri+GetSTHPath, &resp); err != nil {
+	if err = c.fetchAndParse(c.Uri+GetSTHPath, &resp); err != nil {
 		return
 	}
 	sth = &ct.SignedTreeHead{
@@ -362,7 +368,7 @@ func (c *LogClient) GetEntries(start, end int64) ([]ct.LogEntry, error) {
 		return nil, errors.New("start should be <= end")
 	}
 	var resp getEntriesResponse
-	err := c.fetchAndParse(fmt.Sprintf("%s%s?start=%d&end=%d", c.uri, GetEntriesPath, start, end), &resp)
+	err := c.fetchAndParse(fmt.Sprintf("%s%s?start=%d&end=%d", c.Uri, GetEntriesPath, start, end), &resp)
 	if err != nil {
 		return nil, err
 	}
