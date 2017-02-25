@@ -324,6 +324,8 @@ func makeGrabber(config *Config) func(*Conn) error {
 			c.SetTLSVerbose()
 		}
 
+		c.tlsInvalidDHKeyExchange = config.TLSInvalidDHKeyExchange
+
 		if config.SSH.SSH {
 			c.sshScan = &config.SSH
 		}

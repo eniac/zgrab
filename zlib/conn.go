@@ -72,6 +72,9 @@ type Conn struct {
 	offerExtendedMasterSecret bool
 	tlsVerbose                bool
 
+	// send an invalid client key exchange value
+	tlsInvalidDHKeyExchange string
+
 	domain string
 
 	// Encoding type
@@ -293,6 +296,7 @@ func (c *Conn) TLSHandshake() error {
 	tlsConfig.ClientDSAEnabled = true
 	tlsConfig.ForceSuites = c.ForceSuites
 	tlsConfig.CipherSuites = c.CipherSuites
+	tlsConfig.InvalidDHKeyExchange = c.tlsInvalidDHKeyExchange
 	if !c.noSNI && c.domain != "" {
 		tlsConfig.ServerName = c.domain
 	}

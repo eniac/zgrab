@@ -127,6 +127,7 @@ func init() {
 	flag.BoolVar(&config.SSH.NegativeOne, "ssh-negative-one", false, "Set SSH DH kex value to -1 in the selected group")
 	flag.BoolVar(&config.Telnet, "telnet", false, "Read telnet banners")
 	flag.IntVar(&config.TelnetMaxSize, "telnet-max-size", 65536, "Max bytes to read for telnet banner")
+	flag.StringVar(&config.TLSInvalidDHKeyExchange, "tls-invalid-kex", "", "Send an invalid key exchange value. Options are {0,1,pm1,g3,g5,g7}.")
 
 	flag.Parse()
 

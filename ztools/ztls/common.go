@@ -346,6 +346,9 @@ type Config struct {
 
 	// Enable use of the Extended Master Secret extension
 	ExtendedMasterSecret bool
+
+	// Send an invalid DH key exchange value
+	InvalidDHKeyExchange string
 }
 
 func (c *Config) serverInit() {

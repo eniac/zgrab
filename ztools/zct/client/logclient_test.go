@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-    "github.com/zmap/zgrab/ztools/zct"
+	"github.com/zmap/zgrab/ztools/zct"
 	"golang.org/x/net/context"
 )
 
