@@ -263,6 +263,9 @@ func (c *Client) doFollowingRedirects(ireq *Request) (r *Response, err error) {
 		req.Headers.Set("User-Agent", c.UserAgent)
 
 		if r, err = send(req, c.Transport); err != nil {
+			if currentResponse != nil && currentResponse.Body != nil {
+				currentResponse.Body.Close()
+			}
 			break
 		}
 		if c := r.Cookies(); len(c) > 0 {
@@ -270,8 +273,10 @@ func (c *Client) doFollowingRedirects(ireq *Request) (r *Response, err error) {
 		}
 
 		if shouldRedirect(r.StatusCode) {
+			if currentResponse != nil && currentResponse.Body != nil {
+				currentResponse.Body.Close()
+			}
 			currentResponse = r
-			//			r.Body.Close()
 			if urlStr = r.Headers.Get("Location"); urlStr == "" {
 				err = errors.New(fmt.Sprintf("%d response missing Location header", r.StatusCode))
 				break

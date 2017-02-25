@@ -37,125 +37,155 @@ func (c *Conn) clientHandshake() error {
 		c.config = defaultConfig()
 	}
 
-	if len(c.config.ServerName) == 0 && !c.config.InsecureSkipVerify {
-		return errors.New("tls: either ServerName or InsecureSkipVerify must be specified in the tls.Config")
+	var hello *clientHelloMsg
+
+	var session *ClientSessionState
+	var sessionCache ClientSessionCache
+	var cacheKey string
+
+	// first, let's check if a ClientHello template was provided by the user
+	if c.config.ExternalClientHello != nil {
+
+		hello = new(clientHelloMsg)
+
+		if !hello.unmarshal(c.config.ExternalClientHello) {
+			return errors.New("could not read the ClientHello provided")
+		}
+
+		// update the SNI with one name, whether or not the extension was already there
+		hello.serverName = c.config.ServerName
+
+		// then we update the 'raw' value of the message
+		hello.raw = nil
+		_ = hello.marshal()
+
+		session = nil
+		sessionCache = nil
+
+	} else {
+
+		if len(c.config.ServerName) == 0 && !c.config.InsecureSkipVerify {
+			return errors.New("tls: either ServerName or InsecureSkipVerify must be specified in the tls.Config")
+		}
+
+		hello = &clientHelloMsg{
+			vers:                 c.config.maxVersion(),
+			compressionMethods:   []uint8{compressionNone},
+			random:               make([]byte, 32),
+			ocspStapling:         true,
+			serverName:           c.config.ServerName,
+			supportedCurves:      c.config.curvePreferences(),
+			supportedPoints:      []uint8{pointFormatUncompressed},
+			nextProtoNeg:         len(c.config.NextProtos) > 0,
+			secureRenegotiation:  true,
+			alpnProtocols:        c.config.NextProtos,
+			extendedMasterSecret: c.config.maxVersion() >= VersionTLS10 && c.config.ExtendedMasterSecret,
+		}
+
+		if c.config.ForceSessionTicketExt {
+			hello.ticketSupported = true
+		}
+		if c.config.SignedCertificateTimestampExt {
+			hello.sctEnabled = true
+		}
+
+		if c.config.HeartbeatEnabled && !c.config.ExtendedRandom {
+			hello.heartbeatEnabled = true
+			hello.heartbeatMode = heartbeatModePeerAllowed
+		}
+
+		possibleCipherSuites := c.config.cipherSuites()
+		hello.cipherSuites = make([]uint16, 0, len(possibleCipherSuites))
+
+		if c.config.ForceSuites {
+			hello.cipherSuites = possibleCipherSuites
+		} else {
+
+		NextCipherSuite:
+			for _, suiteId := range possibleCipherSuites {
+				for _, suite := range implementedCipherSuites {
+					if suite.id != suiteId {
+						continue
+					}
+					// Don't advertise TLS 1.2-only cipher suites unless
+					// we're attempting TLS 1.2.
+					if hello.vers < VersionTLS12 && suite.flags&suiteTLS12 != 0 {
+						continue
+					}
+					hello.cipherSuites = append(hello.cipherSuites, suiteId)
+					continue NextCipherSuite
+				}
+			}
+		}
+
+		if len(c.config.ClientRandom) == 32 {
+			copy(hello.random, c.config.ClientRandom)
+		} else {
+			_, err := io.ReadFull(c.config.rand(), hello.random)
+			if err != nil {
+				c.sendAlert(alertInternalError)
+				return errors.New("tls: short read from Rand: " + err.Error())
+			}
+		}
+
+		if c.config.ExtendedRandom {
+			hello.extendedRandomEnabled = true
+			hello.extendedRandom = make([]byte, 32)
+			if _, err := io.ReadFull(c.config.rand(), hello.extendedRandom); err != nil {
+				return errors.New("tls: short read from Rand: " + err.Error())
+			}
+		}
+
+		if hello.vers >= VersionTLS12 {
+			hello.signatureAndHashes = c.config.signatureAndHashesForClient()
+		}
+
+		sessionCache = c.config.ClientSessionCache
+		if c.config.SessionTicketsDisabled {
+			sessionCache = nil
+		}
+
+		if sessionCache != nil {
+			hello.ticketSupported = true
+
+			// Try to resume a previously negotiated TLS session, if
+			// available.
+			cacheKey = clientSessionCacheKey(c.conn.RemoteAddr(), c.config)
+			candidateSession, ok := sessionCache.Get(cacheKey)
+			if ok {
+				// Check that the ciphersuite/version used for the
+				// previous session are still valid.
+				cipherSuiteOk := false
+				for _, id := range hello.cipherSuites {
+					if id == candidateSession.cipherSuite {
+						cipherSuiteOk = true
+						break
+					}
+				}
+
+				versOk := candidateSession.vers >= c.config.minVersion() &&
+					candidateSession.vers <= c.config.maxVersion()
+				if versOk && cipherSuiteOk {
+					session = candidateSession
+				}
+			}
+		}
+
+		if session != nil {
+			hello.sessionTicket = session.sessionTicket
+			// A random session ID is used to detect when the
+			// server accepted the ticket and is resuming a session
+			// (see RFC 5077).
+			hello.sessionId = make([]byte, 16)
+			if _, err := io.ReadFull(c.config.rand(), hello.sessionId); err != nil {
+				c.sendAlert(alertInternalError)
+				return errors.New("tls: short read from Rand: " + err.Error())
+			}
+		}
 	}
 
 	c.handshakeLog = new(ServerHandshake)
 	c.heartbleedLog = new(Heartbleed)
-
-	hello := &clientHelloMsg{
-		vers:                 c.config.maxVersion(),
-		compressionMethods:   []uint8{compressionNone},
-		random:               make([]byte, 32),
-		ocspStapling:         true,
-		serverName:           c.config.ServerName,
-		supportedCurves:      c.config.curvePreferences(),
-		supportedPoints:      []uint8{pointFormatUncompressed},
-		nextProtoNeg:         len(c.config.NextProtos) > 0,
-		secureRenegotiation:  true,
-		extendedMasterSecret: c.config.maxVersion() >= VersionTLS10 && c.config.ExtendedMasterSecret,
-	}
-
-	if c.config.ForceSessionTicketExt {
-		hello.ticketSupported = true
-	}
-
-	if c.config.HeartbeatEnabled && !c.config.ExtendedRandom {
-		hello.heartbeatEnabled = true
-		hello.heartbeatMode = heartbeatModePeerAllowed
-	}
-
-	possibleCipherSuites := c.config.cipherSuites()
-	hello.cipherSuites = make([]uint16, 0, len(possibleCipherSuites))
-
-	if c.config.ForceSuites {
-		hello.cipherSuites = possibleCipherSuites
-	} else {
-
-	NextCipherSuite:
-		for _, suiteId := range possibleCipherSuites {
-			for _, suite := range implementedCipherSuites {
-				if suite.id != suiteId {
-					continue
-				}
-				// Don't advertise TLS 1.2-only cipher suites unless
-				// we're attempting TLS 1.2.
-				if hello.vers < VersionTLS12 && suite.flags&suiteTLS12 != 0 {
-					continue
-				}
-				hello.cipherSuites = append(hello.cipherSuites, suiteId)
-				continue NextCipherSuite
-			}
-		}
-	}
-
-	if len(c.config.ClientRandom) == 32 {
-		copy(hello.random, c.config.ClientRandom)
-	} else {
-		_, err := io.ReadFull(c.config.rand(), hello.random)
-		if err != nil {
-			c.sendAlert(alertInternalError)
-			return errors.New("tls: short read from Rand: " + err.Error())
-		}
-	}
-
-	if c.config.ExtendedRandom {
-		hello.extendedRandomEnabled = true
-		hello.extendedRandom = make([]byte, 32)
-		if _, err := io.ReadFull(c.config.rand(), hello.extendedRandom); err != nil {
-			return errors.New("tls: short read from Rand: " + err.Error())
-		}
-	}
-
-	if hello.vers >= VersionTLS12 {
-		hello.signatureAndHashes = c.config.signatureAndHashesForClient()
-	}
-
-	var session *ClientSessionState
-	var cacheKey string
-	sessionCache := c.config.ClientSessionCache
-	if c.config.SessionTicketsDisabled {
-		sessionCache = nil
-	}
-
-	if sessionCache != nil {
-		hello.ticketSupported = true
-
-		// Try to resume a previously negotiated TLS session, if
-		// available.
-		cacheKey = clientSessionCacheKey(c.conn.RemoteAddr(), c.config)
-		candidateSession, ok := sessionCache.Get(cacheKey)
-		if ok {
-			// Check that the ciphersuite/version used for the
-			// previous session are still valid.
-			cipherSuiteOk := false
-			for _, id := range hello.cipherSuites {
-				if id == candidateSession.cipherSuite {
-					cipherSuiteOk = true
-					break
-				}
-			}
-
-			versOk := candidateSession.vers >= c.config.minVersion() &&
-				candidateSession.vers <= c.config.maxVersion()
-			if versOk && cipherSuiteOk {
-				session = candidateSession
-			}
-		}
-	}
-
-	if session != nil {
-		hello.sessionTicket = session.sessionTicket
-		// A random session ID is used to detect when the
-		// server accepted the ticket and is resuming a session
-		// (see RFC 5077).
-		hello.sessionId = make([]byte, 16)
-		if _, err := io.ReadFull(c.config.rand(), hello.sessionId); err != nil {
-			c.sendAlert(alertInternalError)
-			return errors.New("tls: short read from Rand: " + err.Error())
-		}
-	}
 
 	c.writeRecord(recordTypeHandshake, hello.marshal())
 	c.handshakeLog.ClientHello = hello.MakeLog()
@@ -640,9 +670,29 @@ func (hs *clientHandshakeState) processServerHello() (bool, error) {
 		return false, errors.New("tls: server selected unsupported compression format")
 	}
 
-	if !hs.hello.nextProtoNeg && hs.serverHello.nextProtoNeg {
+	clientDidNPN := hs.hello.nextProtoNeg
+	clientDidALPN := len(hs.hello.alpnProtocols) > 0
+	serverHasNPN := hs.serverHello.nextProtoNeg
+	serverHasALPN := len(hs.serverHello.alpnProtocol) > 0
+
+	if !clientDidNPN && serverHasNPN {
 		c.sendAlert(alertHandshakeFailure)
-		return false, errors.New("server advertised unrequested NPN extension")
+		return false, errors.New("tls: server advertised unrequested NPN extension")
+	}
+
+	if !clientDidALPN && serverHasALPN {
+		c.sendAlert(alertHandshakeFailure)
+		return false, errors.New("tls: server advertised unrequested ALPN extension")
+	}
+
+	if serverHasNPN && serverHasALPN {
+		c.sendAlert(alertHandshakeFailure)
+		return false, errors.New("tls: server advertised both NPN and ALPN extensions")
+	}
+
+	if serverHasALPN {
+		c.clientProtocol = hs.serverHello.alpnProtocol
+		c.clientProtocolFallback = false
 	}
 
 	if hs.serverResumedSession() {
@@ -761,18 +811,18 @@ func clientSessionCacheKey(serverAddr net.Addr, config *Config) string {
 	return serverAddr.String()
 }
 
-// mutualProtocol finds the mutual Next Protocol Negotiation protocol given the
-// set of client and server supported protocols. The set of client supported
-// protocols must not be empty. It returns the resulting protocol and flag
+// mutualProtocol finds the mutual Next Protocol Negotiation or ALPN protocol
+// given list of possible protocols and a list of the preference order. The
+// first list must not be empty. It returns the resulting protocol and flag
 // indicating if the fallback case was reached.
-func mutualProtocol(clientProtos, serverProtos []string) (string, bool) {
-	for _, s := range serverProtos {
-		for _, c := range clientProtos {
+func mutualProtocol(protos, preferenceProtos []string) (string, bool) {
+	for _, s := range preferenceProtos {
+		for _, c := range protos {
 			if s == c {
 				return s, false
 			}
 		}
 	}
 
-	return clientProtos[0], true
+	return protos[0], true
 }

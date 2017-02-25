@@ -21,6 +21,13 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"net/url"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/zmap/zgrab/ztools/ftp"
 	"github.com/zmap/zgrab/ztools/http"
 	"github.com/zmap/zgrab/ztools/processing"
@@ -28,15 +35,9 @@ import (
 	"github.com/zmap/zgrab/ztools/scada/fox"
 	"github.com/zmap/zgrab/ztools/scada/siemens"
 	"github.com/zmap/zgrab/ztools/telnet"
-	"github.com/zmap/zgrab/ztools/util"
+	"github.com/zmap/zgrab/ztools/xssh"
 	"github.com/zmap/zgrab/ztools/zlog"
 	"github.com/zmap/zgrab/ztools/ztls"
-	"io"
-	"net"
-	"net/url"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type GrabTarget struct {
@@ -185,11 +186,17 @@ func makeTLSConfig(config *Config, urlHost string) *ztls.Config {
 	if config.TLSExtendedRandom {
 		tlsConfig.ExtendedRandom = true
 	}
+	if config.SignedCertificateTimestampExt {
+		tlsConfig.SignedCertificateTimestampExt = true
+	}
 	if config.GatherSessionTicket {
 		tlsConfig.ForceSessionTicketExt = true
 	}
 	if !config.NoSNI && urlHost != "" {
 		tlsConfig.ServerName = urlHost
+	}
+	if config.ExternalClientHello != nil {
+		tlsConfig.ExternalClientHello = config.ExternalClientHello
 	}
 
 	return tlsConfig
@@ -205,12 +212,12 @@ func containsPort(host string) bool {
 	return strings.LastIndex(host, ":") > strings.LastIndex(host, "]")
 }
 
-func makeHTTPGrabber(config *Config, grabData GrabData) func(string, string, string) error {
+func makeHTTPGrabber(config *Config, grabData *GrabData) func(string, string, string) error {
 	g := func(urlHost, endpoint, httpHost string) (err error) {
 
 		var tlsConfig *ztls.Config
 		if config.TLS {
-			tlsConfig = makeTLSConfig(config, urlHost)
+			tlsConfig = makeTLSConfig(config, httpHost)
 		}
 
 		transport := &http.Transport{
@@ -218,7 +225,7 @@ func makeHTTPGrabber(config *Config, grabData GrabData) func(string, string, str
 			Dial:                makeNetDialer(config),
 			DisableKeepAlives:   false,
 			DisableCompression:  false,
-			MaxIdleConnsPerHost: -1,
+			MaxIdleConnsPerHost: config.HTTP.MaxRedirects,
 			TLSClientConfig:     tlsConfig,
 		}
 
@@ -226,15 +233,19 @@ func makeHTTPGrabber(config *Config, grabData GrabData) func(string, string, str
 		client.UserAgent = config.HTTP.UserAgent
 		client.CheckRedirect = func(req *http.Request, res *http.Response, via []*http.Request) error {
 			grabData.HTTP.RedirectResponseChain = append(grabData.HTTP.RedirectResponseChain, res)
-			if str, err := util.ReadString(res.Body, config.HTTP.MaxSize*1024); err != nil {
-				return err
-			} else {
-				res.BodyText = str
+			b := new(bytes.Buffer)
+			maxReadLen := int64(config.HTTP.MaxSize) * 1024
+			readLen := maxReadLen
+			if res.ContentLength >= 0 && res.ContentLength < maxReadLen {
+				readLen = res.ContentLength
+			}
+			io.CopyN(b, res.Body, readLen)
+			res.BodyText = b.String()
+			if len(res.BodyText) > 0 {
 				m := sha256.New()
-				m.Write([]byte(str))
+				m.Write(b.Bytes())
 				res.BodySHA256 = m.Sum(nil)
 			}
-			res.Body.Close()
 
 			if len(via) > config.HTTP.MaxRedirects {
 				return errors.New(fmt.Sprintf("stopped after %d redirects", config.HTTP.MaxRedirects))
@@ -268,7 +279,7 @@ func makeHTTPGrabber(config *Config, grabData GrabData) func(string, string, str
 			httpHost = u.Host
 		}
 
-		//Remove host port if using default port
+		// Remove host port if using default port
 		if containsPort(httpHost) && usingDefaultPort(u.Scheme, config.Port) {
 			hostWithoutPort, _, err := net.SplitHostPort(httpHost)
 			if err != nil {
@@ -285,7 +296,9 @@ func makeHTTPGrabber(config *Config, grabData GrabData) func(string, string, str
 		default:
 			zlog.Fatalf("Bad HTTP Method: %s. Valid options are: GET, HEAD.", config.HTTP.Method)
 		}
-
+		if resp != nil && resp.Body != nil {
+			defer resp.Body.Close()
+		}
 		grabData.HTTP.Response = resp
 
 		if err != nil {
@@ -293,16 +306,19 @@ func makeHTTPGrabber(config *Config, grabData GrabData) func(string, string, str
 			return err
 		}
 
-		if str, err := util.ReadString(resp.Body, config.HTTP.MaxSize*1024); err != nil {
-			return err
-		} else {
-			grabData.HTTP.Response.BodyText = str
+		b := new(bytes.Buffer)
+		maxReadLen := int64(config.HTTP.MaxSize) * 1024
+		readLen := maxReadLen
+		if resp.ContentLength >= 0 && resp.ContentLength < maxReadLen {
+			readLen = resp.ContentLength
+		}
+		io.CopyN(b, resp.Body, readLen)
+		grabData.HTTP.Response.BodyText = b.String()
+		if len(grabData.HTTP.Response.BodyText) > 0 {
 			m := sha256.New()
-			m.Write([]byte(str))
+			m.Write(b.Bytes())
 			grabData.HTTP.Response.BodySHA256 = m.Sum(nil)
 		}
-
-		resp.Body.Close()
 
 		return nil
 	}
@@ -357,8 +373,14 @@ func makeGrabber(config *Config) func(*Conn) error {
 		if config.GatherSessionTicket {
 			c.SetGatherSessionTicket()
 		}
+		if config.SignedCertificateTimestampExt {
+			c.SetSignedCertificateTimestampExt()
+		}
 		if config.ExtendedMasterSecret {
 			c.SetOfferExtendedMasterSecret()
+		}
+		if config.ExternalClientHello != nil {
+			c.SetExternalClientHello(config.ExternalClientHello)
 		}
 		if config.TLSVerbose {
 			c.SetTLSVerbose()
@@ -367,7 +389,6 @@ func makeGrabber(config *Config) func(*Conn) error {
 		if config.SSH.SSH {
 			c.sshScan = &config.SSH
 		}
-		c.ReadEncoding = config.Encoding
 		if config.TLS {
 			if err := c.TLSHandshake(); err != nil {
 				c.erroredComponent = "tls"
@@ -499,6 +520,23 @@ func makeGrabber(config *Config) func(*Conn) error {
 			}
 		}
 
+		if config.SMTP {
+			if err := c.SMTPQuit(); err != nil {
+				c.erroredComponent = "quit"
+				return err
+			}
+		} else if config.POP3 {
+			if err := c.POP3Quit(); err != nil {
+				c.erroredComponent = "quit"
+				return err
+			}
+		} else if config.IMAP {
+			if err := c.IMAPQuit(); err != nil {
+				c.erroredComponent = "quit"
+				return err
+			}
+		}
+
 		if config.Modbus {
 			if _, err := c.SendModbusEcho(); err != nil {
 				c.erroredComponent = "modbus"
@@ -535,9 +573,40 @@ func makeGrabber(config *Config) func(*Conn) error {
 	}
 }
 
-func GrabBanner(config *Config, target *GrabTarget) *Grab {
+func makeXSSHGrabber(gblConfig *Config, grabData GrabData) func(string) error {
+	return func(netAddr string) error {
 
-	if len(config.HTTP.Endpoint) == 0 {
+		xsshConfig := xssh.MakeXSSHConfig()
+		xsshConfig.Timeout = gblConfig.Timeout
+		xsshConfig.ConnLog = grabData.XSSH
+		_, err := xssh.Dial("tcp", netAddr, xsshConfig)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+func GrabBanner(config *Config, target *GrabTarget) *Grab {
+	if config.XSSH.XSSH {
+		t := time.Now()
+
+		grabData := GrabData{XSSH: new(xssh.HandshakeLog)}
+		xsshGrabber := makeXSSHGrabber(config, grabData)
+
+		port := strconv.FormatUint(uint64(config.Port), 10)
+		rhost := net.JoinHostPort(target.Addr.String(), port)
+
+		err := xsshGrabber(rhost)
+
+		return &Grab{
+			IP:    target.Addr,
+			Time:  t,
+			Data:  grabData,
+			Error: err,
+		}
+	} else if len(config.HTTP.Endpoint) == 0 {
 		dial := makeDialer(config)
 		grabber := makeGrabber(config)
 		port := strconv.FormatUint(uint64(config.Port), 10)
@@ -571,7 +640,7 @@ func GrabBanner(config *Config, target *GrabTarget) *Grab {
 		}
 	} else {
 		grabData := GrabData{HTTP: new(HTTP)}
-		httpGrabber := makeHTTPGrabber(config, grabData)
+		httpGrabber := makeHTTPGrabber(config, &grabData)
 		port := strconv.FormatUint(uint64(config.Port), 10)
 		t := time.Now()
 		var rhost string

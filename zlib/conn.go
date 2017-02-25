@@ -64,18 +64,17 @@ type Conn struct {
 
 	caPool *x509.CertPool
 
-	CipherSuites              []uint16
-	ForceSuites               bool
-	noSNI                     bool
-	extendedRandom            bool
-	gatherSessionTicket       bool
-	offerExtendedMasterSecret bool
-	tlsVerbose                bool
+	CipherSuites                  []uint16
+	ForceSuites                   bool
+	noSNI                         bool
+	ExternalClientHello           []byte
+	extendedRandom                bool
+	gatherSessionTicket           bool
+	offerExtendedMasterSecret     bool
+	tlsVerbose                    bool
+	SignedCertificateTimestampExt bool
 
 	domain string
-
-	// Encoding type
-	ReadEncoding string
 
 	// SSH
 	sshScan *SSHScanConfig
@@ -89,6 +88,10 @@ func (c *Conn) getUnderlyingConn() net.Conn {
 		return c.tlsConn
 	}
 	return c.conn
+}
+
+func (c *Conn) SetExternalClientHello(clientHello []byte) {
+	c.ExternalClientHello = clientHello
 }
 
 func (c *Conn) SetExtendedRandom() {
@@ -113,6 +116,10 @@ func (c *Conn) SetGatherSessionTicket() {
 
 func (c *Conn) SetOfferExtendedMasterSecret() {
 	c.offerExtendedMasterSecret = true
+}
+
+func (c *Conn) SetSignedCertificateTimestampExt() {
+	c.SignedCertificateTimestampExt = true
 }
 
 func (c *Conn) SetTLSVerbose() {
@@ -299,11 +306,17 @@ func (c *Conn) TLSHandshake() error {
 	if c.extendedRandom {
 		tlsConfig.ExtendedRandom = true
 	}
+	if c.SignedCertificateTimestampExt {
+		tlsConfig.SignedCertificateTimestampExt = true
+	}
 	if c.gatherSessionTicket {
 		tlsConfig.ForceSessionTicketExt = true
 	}
 	if c.offerExtendedMasterSecret {
 		tlsConfig.ExtendedMasterSecret = true
+	}
+	if c.ExternalClientHello != nil {
+		tlsConfig.ExternalClientHello = c.ExternalClientHello
 	}
 
 	c.tlsConn = ztls.Client(c.conn, tlsConfig)
@@ -449,6 +462,12 @@ func (c *Conn) SMTPHelp() error {
 	return err
 }
 
+func (c *Conn) SMTPQuit() error {
+	cmd := []byte("QUIT\r\n")
+	_, err := c.getUnderlyingConn().Write(cmd)
+	return err
+}
+
 func (c *Conn) readPop3Response(res []byte) (int, error) {
 	return util.ReadUntilRegex(c.getUnderlyingConn(), res, pop3EndRegex)
 }
@@ -459,6 +478,12 @@ func (c *Conn) POP3Banner(b []byte) (int, error) {
 	return n, err
 }
 
+func (c *Conn) POP3Quit() error {
+	cmd := []byte("QUIT\r\n")
+	_, err := c.getUnderlyingConn().Write(cmd)
+	return err
+}
+
 func (c *Conn) readImapStatusResponse(res []byte) (int, error) {
 	return util.ReadUntilRegex(c.getUnderlyingConn(), res, imapStatusEndRegex)
 }
@@ -467,6 +492,12 @@ func (c *Conn) IMAPBanner(b []byte) (int, error) {
 	n, err := c.readImapStatusResponse(b)
 	c.grabData.Banner = string(b[0:n])
 	return n, err
+}
+
+func (c *Conn) IMAPQuit() error {
+	cmd := []byte("a001 CLOSE\r\n")
+	_, err := c.getUnderlyingConn().Write(cmd)
+	return err
 }
 
 func (c *Conn) CheckHeartbleed(b []byte) (int, error) {

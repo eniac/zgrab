@@ -45,6 +45,10 @@ type SSHScanConfig struct {
 	NegativeOne       bool
 }
 
+type XSSHScanConfig struct {
+	XSSH bool
+}
+
 func (sc *SSHScanConfig) GetClientImplementation() (*ssh.ClientImplementation, bool) {
 	if sc.Client == "" {
 		return &ssh.OpenSSH_6_6p1, true
@@ -102,29 +106,28 @@ type Config struct {
 	// DNS
 	LookupDomain bool
 
-	// Encoding
-	Encoding string
-
 	// TLS
-	TLS                  bool
-	TLSVersion           uint16
-	Heartbleed           bool
-	RootCAPool           *x509.CertPool
-	DHEOnly              bool
-	ECDHEOnly            bool
-	ExportsOnly          bool
-	ExportsDHOnly        bool
-	FirefoxOnly          bool
-	FirefoxNoDHE         bool
-	ChromeOnly           bool
-	ChromeNoDHE          bool
-	SafariOnly           bool
-	SafariNoDHE          bool
-	NoSNI                bool
-	TLSExtendedRandom    bool
-	GatherSessionTicket  bool
-	ExtendedMasterSecret bool
-	TLSVerbose           bool
+	TLS                           bool
+	TLSVersion                    uint16
+	Heartbleed                    bool
+	RootCAPool                    *x509.CertPool
+	DHEOnly                       bool
+	ECDHEOnly                     bool
+	ExportsOnly                   bool
+	ExportsDHOnly                 bool
+	FirefoxOnly                   bool
+	FirefoxNoDHE                  bool
+	ChromeOnly                    bool
+	ChromeNoDHE                   bool
+	SafariOnly                    bool
+	SafariNoDHE                   bool
+	NoSNI                         bool
+	TLSExtendedRandom             bool
+	GatherSessionTicket           bool
+	ExtendedMasterSecret          bool
+	TLSVerbose                    bool
+	SignedCertificateTimestampExt bool
+	ExternalClientHello           []byte
 
 	// SSH
 	SSH SSHScanConfig
@@ -175,4 +178,7 @@ type Config struct {
 
 	// Go Runtime Config
 	GOMAXPROCS int
+
+	// x/crypto SSH
+	XSSH XSSHScanConfig
 }
