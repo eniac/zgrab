@@ -282,23 +282,6 @@ scans = [
                 ('256_BRAINPOOL', ' --curve-preferences 26'),
                 ]
             ),
-        Config(name='TLS-2526', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '2526',
-                },
-            zgrab_common_options=' --tls --port 2526',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
         Config(name='TLS-8443', 
             zmap_options={
                 'probe-module': 'tcp_synscan',
