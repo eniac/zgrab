@@ -74,6 +74,9 @@ type Conn struct {
 	tlsVerbose                    bool
 	SignedCertificateTimestampExt bool
 
+	// send an invalid client key exchange value
+	tlsInvalidDHKeyExchange string
+
 	domain string
 
 	// SSH
@@ -300,6 +303,7 @@ func (c *Conn) TLSHandshake() error {
 	tlsConfig.ClientDSAEnabled = true
 	tlsConfig.ForceSuites = c.ForceSuites
 	tlsConfig.CipherSuites = c.CipherSuites
+	tlsConfig.InvalidDHKeyExchange = c.tlsInvalidDHKeyExchange
 	if !c.noSNI && c.domain != "" {
 		tlsConfig.ServerName = c.domain
 	}

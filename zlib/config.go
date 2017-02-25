@@ -107,6 +107,7 @@ type Config struct {
 	LookupDomain bool
 
 	// TLS
+<<<<<<< HEAD
 	TLS                           bool
 	TLSVersion                    uint16
 	Heartbleed                    bool
@@ -128,6 +129,7 @@ type Config struct {
 	TLSVerbose                    bool
 	SignedCertificateTimestampExt bool
 	ExternalClientHello           []byte
+	TLSInvalidDHKeyExchange string
 
 	// SSH
 	SSH SSHScanConfig

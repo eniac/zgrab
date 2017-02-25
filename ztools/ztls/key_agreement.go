@@ -713,13 +713,87 @@ func (ka *dheKeyAgreement) generateClientKeyExchange(config *Config, clientHello
 		return nil, nil, errors.New("missing ServerKeyExchange message")
 	}
 
-	xOurs, err := rand.Int(config.rand(), ka.p)
+	var err error
+	var yOurs *big.Int
+	xOurs := big.NewInt(0)
+	var preMasterSecret []byte
+	switch config.InvalidDHKeyExchange {
+	case "0":
+		yOurs = big.NewInt(0)
+		preMasterSecret = yOurs.Bytes()
+	case "1":
+		yOurs = big.NewInt(1)
+		preMasterSecret = yOurs.Bytes()
+	case "pm1":
+		yOurs = new(big.Int).Sub(ka.p, big.NewInt(1))
+		preMasterSecret = yOurs.Bytes()
+	case "g3":
+		pm1 := new(big.Int).Sub(ka.p, big.NewInt(1))
+		gen := new(big.Int)
+		pm1d3, rem := new(big.Int).DivMod(pm1, big.NewInt(3), new(big.Int))
+		if rem.Cmp(big.NewInt(0)) == 0 {
+			// p-1 is divisible by 3
+			done := false
+			for !done {
+				h, _ := rand.Int(config.rand(), ka.p)
+				gen.Exp(h, pm1d3, ka.p)
+				if gen.Cmp(big.NewInt(1)) != 0 {
+					done = true
+				}
+			}
+		} else {
+			err = errors.New("order not divisible by 3")
+		}
+		yOurs = gen
+		preMasterSecret = yOurs.Bytes()
+	case "g5":
+		pm1 := new(big.Int).Sub(ka.p, big.NewInt(1))
+		gen := new(big.Int)
+		pm1d5, rem := new(big.Int).DivMod(pm1, big.NewInt(5), new(big.Int))
+		if rem.Cmp(big.NewInt(0)) == 0 {
+			// p-1 is divisible by 5
+			done := false
+			for !done {
+				h, _ := rand.Int(config.rand(), ka.p)
+				gen.Exp(h, pm1d5, ka.p)
+				if gen.Cmp(big.NewInt(1)) != 0 {
+					done = true
+				}
+			}
+		} else {
+			err = errors.New("order not divisible by 5")
+		}
+		yOurs = gen
+		preMasterSecret = yOurs.Bytes()
+	case "g7":
+		pm1 := new(big.Int).Sub(ka.p, big.NewInt(1))
+		gen := new(big.Int)
+		pm1d7, rem := new(big.Int).DivMod(pm1, big.NewInt(7), new(big.Int))
+		if rem.Cmp(big.NewInt(0)) == 0 {
+			// p-1 is divisible by 7
+			done := false
+			for !done {
+				h, _ := rand.Int(config.rand(), ka.p)
+				gen.Exp(h, pm1d7, ka.p)
+				if gen.Cmp(big.NewInt(1)) != 0 {
+					done = true
+				}
+			}
+		} else {
+			err = errors.New("order not divisible by 7")
+		}
+		yOurs = gen
+		preMasterSecret = yOurs.Bytes()
+	default:
+		xOurs, err = rand.Int(config.rand(), ka.p)
+		preMasterSecret = new(big.Int).Exp(ka.yTheirs, xOurs, ka.p).Bytes()
+		yOurs = new(big.Int).Exp(ka.g, xOurs, ka.p)
+	}
+
 	if err != nil {
 		return nil, nil, err
 	}
-	preMasterSecret := new(big.Int).Exp(ka.yTheirs, xOurs, ka.p).Bytes()
 
-	yOurs := new(big.Int).Exp(ka.g, xOurs, ka.p)
 	ka.yOurs = yOurs
 	ka.xOurs = xOurs
 	ka.yClient = new(big.Int).Set(yOurs)

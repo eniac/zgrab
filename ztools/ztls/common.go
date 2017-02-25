@@ -356,6 +356,9 @@ type Config struct {
 
 	// Explicitly set ClientHello with raw data
 	ExternalClientHello []byte
+
+	// Send an invalid DH key exchange value
+	InvalidDHKeyExchange string
 }
 
 func (c *Config) serverInit() {
