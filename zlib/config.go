@@ -107,7 +107,6 @@ type Config struct {
 	LookupDomain bool
 
 	// TLS
-<<<<<<< HEAD
 	TLS                           bool
 	TLSVersion                    uint16
 	Heartbleed                    bool
