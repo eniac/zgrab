@@ -9,9 +9,9 @@ package http_test
 import (
 	"errors"
 	"fmt"
-	. "github.com/zmap/zgrab/ztools/http"
-	"github.com/zmap/zgrab/ztools/http/httptest"
-	"github.com/zmap/zgrab/ztools/ztls"
+	. "gopkg.in/eniac/zgrab.v0/ztools/http"
+	"gopkg.in/eniac/zgrab.v0/ztools/http/httptest"
+	"gopkg.in/eniac/zgrab.v0/ztools/ztls"
 	"io"
 	"io/ioutil"
 	"net"

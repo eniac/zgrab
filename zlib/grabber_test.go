@@ -2,11 +2,11 @@ package zlib_test
 
 import (
 	"fmt"
-	"github.com/zmap/zgrab/zlib"
-	. "github.com/zmap/zgrab/ztools/http"
-	"github.com/zmap/zgrab/ztools/http/httptest"
-	"github.com/zmap/zgrab/ztools/zlog"
-	"github.com/zmap/zgrab/ztools/ztls"
+	"gopkg.in/eniac/zgrab.v0/zlib"
+	. "gopkg.in/eniac/zgrab.v0/ztools/http"
+	"gopkg.in/eniac/zgrab.v0/ztools/http/httptest"
+	"gopkg.in/eniac/zgrab.v0/ztools/zlog"
+	"gopkg.in/eniac/zgrab.v0/ztools/ztls"
 	"net"
 	"net/url"
 	"os"

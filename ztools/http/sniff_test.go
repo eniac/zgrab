@@ -7,8 +7,8 @@ package http_test
 import (
 	"bytes"
 	"fmt"
-	. "github.com/zmap/zgrab/ztools/http"
-	"github.com/zmap/zgrab/ztools/http/httptest"
+	. "gopkg.in/eniac/zgrab.v0/ztools/http"
+	"gopkg.in/eniac/zgrab.v0/ztools/http/httptest"
 	"io"
 	"io/ioutil"
 	"log"

@@ -18,7 +18,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/zmap/zgrab/ztools/x509"
+	"gopkg.in/eniac/zgrab.v0/ztools/x509"
 )
 
 type clientHandshakeState struct {

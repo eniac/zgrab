@@ -22,7 +22,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/zmap/zgrab/ztools/x509"
+	"gopkg.in/eniac/zgrab.v0/ztools/x509"
 	"github.com/zmap/zlint/zlint"
 )
 

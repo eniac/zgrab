@@ -17,7 +17,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/zmap/zgrab/ztools/xssh/testdata"
+	"gopkg.in/eniac/zgrab.v0/ztools/xssh/testdata"
 	"golang.org/x/crypto/ed25519"
 )
 

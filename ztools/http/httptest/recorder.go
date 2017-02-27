@@ -7,7 +7,7 @@ package httptest
 
 import (
 	"bytes"
-	"github.com/zmap/zgrab/ztools/http"
+	"gopkg.in/eniac/zgrab.v0/ztools/http"
 )
 
 // ResponseRecorder is an implementation of http.ResponseWriter that

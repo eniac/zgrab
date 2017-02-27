@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/zmap/zgrab/ztools/keys"
-	"github.com/zmap/zgrab/ztools/x509/pkix"
+	"gopkg.in/eniac/zgrab.v0/ztools/keys"
+	"gopkg.in/eniac/zgrab.v0/ztools/x509/pkix"
 )
 
 type auxKeyUsage struct {

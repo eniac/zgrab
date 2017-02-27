@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zmap/zgrab/ztools/x509"
+	"gopkg.in/eniac/zgrab.v0/ztools/x509"
 )
 
 // A Conn represents a secured connection.

@@ -15,8 +15,8 @@
 package zlib
 
 import (
-	"github.com/zmap/zgrab/ztools/http"
-	"github.com/zmap/zgrab/ztools/util"
+	"gopkg.in/eniac/zgrab.v0/ztools/http"
+	"gopkg.in/eniac/zgrab.v0/ztools/util"
 	"net"
 	"net/url"
 	"strings"

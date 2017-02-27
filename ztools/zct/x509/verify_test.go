@@ -6,7 +6,7 @@ package x509
 
 import (
 	// START CT CHANGES
-	"github.com/zmap/zgrab/ztools/zct/x509/pkix"
+	"gopkg.in/eniac/zgrab.v0/ztools/zct/x509/pkix"
 	// END CT CHANGES
 	"encoding/pem"
 	"errors"

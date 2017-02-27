@@ -28,16 +28,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zmap/zgrab/ztools/ftp"
-	"github.com/zmap/zgrab/ztools/http"
-	"github.com/zmap/zgrab/ztools/processing"
-	"github.com/zmap/zgrab/ztools/scada/dnp3"
-	"github.com/zmap/zgrab/ztools/scada/fox"
-	"github.com/zmap/zgrab/ztools/scada/siemens"
-	"github.com/zmap/zgrab/ztools/telnet"
-	"github.com/zmap/zgrab/ztools/xssh"
-	"github.com/zmap/zgrab/ztools/zlog"
-	"github.com/zmap/zgrab/ztools/ztls"
+	"gopkg.in/eniac/zgrab.v0/ztools/ftp"
+	"gopkg.in/eniac/zgrab.v0/ztools/http"
+	"gopkg.in/eniac/zgrab.v0/ztools/processing"
+	"gopkg.in/eniac/zgrab.v0/ztools/scada/dnp3"
+	"gopkg.in/eniac/zgrab.v0/ztools/scada/fox"
+	"gopkg.in/eniac/zgrab.v0/ztools/scada/siemens"
+	"gopkg.in/eniac/zgrab.v0/ztools/telnet"
+	"gopkg.in/eniac/zgrab.v0/ztools/xssh"
+	"gopkg.in/eniac/zgrab.v0/ztools/zlog"
+	"gopkg.in/eniac/zgrab.v0/ztools/ztls"
 )
 
 type GrabTarget struct {

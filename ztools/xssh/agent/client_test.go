@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zmap/zgrab/ztools/xssh"
+	"gopkg.in/eniac/zgrab.v0/ztools/xssh"
 )
 
 // startAgent executes ssh-agent, and returns a Agent interface to it.

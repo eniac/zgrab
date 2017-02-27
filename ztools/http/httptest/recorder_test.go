@@ -6,7 +6,7 @@ package httptest
 
 import (
 	"fmt"
-	"github.com/zmap/zgrab/ztools/http"
+	"gopkg.in/eniac/zgrab.v0/ztools/http"
 	"testing"
 )
 

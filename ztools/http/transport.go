@@ -15,7 +15,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/zmap/zgrab/ztools/ztls"
+	"gopkg.in/eniac/zgrab.v0/ztools/ztls"
 	"io"
 	"io/ioutil"
 	"net"

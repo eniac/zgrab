@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zmap/zgrab/ztools/xssh"
+	"gopkg.in/eniac/zgrab.v0/ztools/xssh"
 )
 
 type privKey struct {

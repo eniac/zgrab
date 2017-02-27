@@ -14,7 +14,7 @@
 // 	        panic(err)
 // 	}
 // 	defer terminal.Restore(0, oldState)
-package terminal // import "github.com/zmap/zgrab/ztools/xssh/terminal"
+package terminal // import "gopkg.in/eniac/zgrab.v0/ztools/xssh/terminal"
 
 import (
 	"io"

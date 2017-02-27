@@ -7,7 +7,7 @@ package x509
 import (
 	"crypto/rsa"
 	// START CT CHANGES
-	"github.com/zmap/zgrab/ztools/zct/asn1"
+	"gopkg.in/eniac/zgrab.v0/ztools/zct/asn1"
 	// END CT CHANGES
 	"errors"
 	"math/big"

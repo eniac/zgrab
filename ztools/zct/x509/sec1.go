@@ -8,7 +8,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	// START CT CHANGES
-	"github.com/zmap/zgrab/ztools/zct/asn1"
+	"gopkg.in/eniac/zgrab.v0/ztools/zct/asn1"
 	// START CT CHANGES
 	"errors"
 	"fmt"

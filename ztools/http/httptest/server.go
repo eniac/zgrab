@@ -10,7 +10,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"github.com/zmap/zgrab/ztools/http"
+	"gopkg.in/eniac/zgrab.v0/ztools/http"
 	"net"
 	"os"
 	"sync"

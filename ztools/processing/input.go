@@ -15,7 +15,7 @@
 package processing
 
 import (
-	"github.com/zmap/zgrab/ztools/zlog"
+	"gopkg.in/eniac/zgrab.v0/ztools/zlog"
 	"io"
 	"sync"
 )

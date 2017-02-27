@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zmap/zgrab/ztools/x509/pkix"
+	"gopkg.in/eniac/zgrab.v0/ztools/x509/pkix"
 )
 
 type verifyTest struct {

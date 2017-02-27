@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/zmap/zgrab/ztools/x509/pkix"
-	"github.com/zmap/zgrab/ztools/zct"
+	"gopkg.in/eniac/zgrab.v0/ztools/x509/pkix"
+	"gopkg.in/eniac/zgrab.v0/ztools/zct"
 )
 
 var (

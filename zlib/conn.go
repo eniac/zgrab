@@ -28,12 +28,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zmap/zgrab/ztools/ftp"
-	"github.com/zmap/zgrab/ztools/scada/bacnet"
-	"github.com/zmap/zgrab/ztools/ssh"
-	"github.com/zmap/zgrab/ztools/util"
-	"github.com/zmap/zgrab/ztools/x509"
-	"github.com/zmap/zgrab/ztools/ztls"
+	"gopkg.in/eniac/zgrab.v0/ztools/ftp"
+	"gopkg.in/eniac/zgrab.v0/ztools/scada/bacnet"
+	"gopkg.in/eniac/zgrab.v0/ztools/ssh"
+	"gopkg.in/eniac/zgrab.v0/ztools/util"
+	"gopkg.in/eniac/zgrab.v0/ztools/x509"
+	"gopkg.in/eniac/zgrab.v0/ztools/ztls"
 )
 
 var smtpEndRegex = regexp.MustCompile(`(?:^\d\d\d\s.*\r\n$)|(?:^\d\d\d-[\s\S]*\r\n\d\d\d\s.*\r\n$)`)

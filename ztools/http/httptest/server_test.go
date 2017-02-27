@@ -5,7 +5,7 @@
 package httptest
 
 import (
-	"github.com/zmap/zgrab/ztools/http"
+	"gopkg.in/eniac/zgrab.v0/ztools/http"
 	"io/ioutil"
 	"testing"
 )

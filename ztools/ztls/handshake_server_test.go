@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zmap/zgrab/ztools/x509"
+	"gopkg.in/eniac/zgrab.v0/ztools/x509"
 )
 
 // zeroSource is an io.Reader that returns an unlimited number of zero bytes.

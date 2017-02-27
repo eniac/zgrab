@@ -9,7 +9,7 @@ import (
 	"io"
 	"math/big"
 
-	ztoolsKeys "github.com/zmap/zgrab/ztools/keys"
+	ztoolsKeys "gopkg.in/eniac/zgrab.v0/ztools/keys"
 )
 
 const (

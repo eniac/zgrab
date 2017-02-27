@@ -19,15 +19,15 @@ import (
 	"net"
 	"time"
 
-	"github.com/zmap/zgrab/ztools/ftp"
-	"github.com/zmap/zgrab/ztools/scada/bacnet"
-	"github.com/zmap/zgrab/ztools/scada/dnp3"
-	"github.com/zmap/zgrab/ztools/scada/fox"
-	"github.com/zmap/zgrab/ztools/scada/siemens"
-	"github.com/zmap/zgrab/ztools/ssh"
-	"github.com/zmap/zgrab/ztools/telnet"
-	"github.com/zmap/zgrab/ztools/xssh"
-	"github.com/zmap/zgrab/ztools/ztls"
+	"gopkg.in/eniac/zgrab.v0/ztools/ftp"
+	"gopkg.in/eniac/zgrab.v0/ztools/scada/bacnet"
+	"gopkg.in/eniac/zgrab.v0/ztools/scada/dnp3"
+	"gopkg.in/eniac/zgrab.v0/ztools/scada/fox"
+	"gopkg.in/eniac/zgrab.v0/ztools/scada/siemens"
+	"gopkg.in/eniac/zgrab.v0/ztools/ssh"
+	"gopkg.in/eniac/zgrab.v0/ztools/telnet"
+	"gopkg.in/eniac/zgrab.v0/ztools/xssh"
+	"gopkg.in/eniac/zgrab.v0/ztools/ztls"
 )
 
 type Grab struct {

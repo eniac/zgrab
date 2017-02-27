@@ -10,7 +10,7 @@ import (
 	"crypto/rand"
 	"testing"
 
-	"github.com/zmap/zgrab/ztools/xssh"
+	"gopkg.in/eniac/zgrab.v0/ztools/xssh"
 )
 
 func DISABLED_TestCertLogin(t *testing.T) {

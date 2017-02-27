@@ -10,7 +10,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/zmap/zgrab/ztools/xssh"
+	"gopkg.in/eniac/zgrab.v0/ztools/xssh"
 )
 
 // RequestAgentForwarding sets up agent forwarding for the session.
