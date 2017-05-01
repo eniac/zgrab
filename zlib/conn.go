@@ -32,9 +32,9 @@ import (
 	"github.com/zmap/zgrab/ztools/scada/bacnet"
 	"github.com/zmap/zgrab/ztools/ssh"
 	"github.com/zmap/zgrab/ztools/util"
-	"github.com/zmap/zgrab/ztools/x509"
-	"github.com/zmap/zgrab/ztools/ztls"
-	"github.com/zmap/zgrab/ztools/ike"
+	"github.com/zmap/zcrypto/x509"
+	ztls "github.com/zmap/zcrypto/tls"
+	"github.com/eniac/zgrab/ztools/ike"
 )
 
 var smtpEndRegex = regexp.MustCompile(`(?:^\d\d\d\s.*\r\n$)|(?:^\d\d\d-[\s\S]*\r\n\d\d\d\s.*\r\n$)`)
