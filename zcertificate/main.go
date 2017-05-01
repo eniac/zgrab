@@ -22,7 +22,7 @@ import (
 	"encoding/pem"
 	"fmt"
 
-	"github.com/zmap/zgrab/ztools/x509"
+	"github.com/zmap/zcrypto/x509"
 )
 
 func exitErr(a ...interface{}) {

@@ -25,8 +25,8 @@ import (
 	"github.com/zmap/zgrab/ztools/scada/fox"
 	"github.com/zmap/zgrab/ztools/ssh"
 	"github.com/zmap/zgrab/ztools/telnet"
-	"github.com/zmap/zgrab/ztools/ztls"
-	"github.com/zmap/zgrab/ztools/ike"
+	ztls "github.com/zmap/zcrypto/tls"
+	"github.com/eniac/zgrab/ztools/ike"
 	"github.com/zmap/zgrab/ztools/scada/siemens"
 )
 

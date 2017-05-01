@@ -22,8 +22,8 @@ import (
 	"time"
 
 	"github.com/zmap/zgrab/ztools/ssh"
-    "github.com/zmap/zgrab/ztools/ike"
-	"github.com/zmap/zgrab/ztools/x509"
+    "github.com/eniac/zgrab/ztools/ike"
+	"github.com/zmap/zcrypto/x509"
 	"github.com/zmap/zgrab/ztools/zlog"
 )
 
