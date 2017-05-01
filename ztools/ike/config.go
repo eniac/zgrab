@@ -424,7 +424,30 @@ func (c *Config) MakeFORTIGATE() {
             },},
         }
     } else {
-        panic("FORTIGATE_V2 not implemented")
+        c.Proposals = []ProposalConfig {
+            {ProposalNum: 1, Transforms: []TransformConfig {
+                {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(256),},}},
+                {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(192),},}},
+                {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []AttributeConfig {{Type: KEY_LENGTH_V2, Value: uint16ToBytes(128),},}},
+                {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_3DES_V2,},
+                {Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_DES_V2,},
+                {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_512_V2,},
+                {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_384_V2,},
+                {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA2_256_V2,},
+                {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA1_V2,},
+                {Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_MD5_V2,},
+                {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA2_512_256_V2,},
+                {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA2_384_192_V2,},
+                {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA2_256_128_V2,},
+                {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA1_96_V2,},
+                {Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_MD5_96_V2,},
+                {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_768_V2,},
+                {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_1024_V2,},
+                {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_1536_V2,},
+                {Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_2048_V2,},
+                },
+            },
+        }
     }
 }
 
