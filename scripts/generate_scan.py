@@ -172,7 +172,7 @@ def main(args):
             except Exception:
                 pass
 
-            zgrab_scan_cmd = ('cat {r} | ztee /dev/null --success-only | zfilter.py').format(r=zmap_scan_results)
+            zgrab_scan_cmd = ('cat {r} | ztee /dev/null --success-only | ' + zgrab_path + '/scripts/zfilter.py').format(r=zmap_scan_results)
             if 'DOUBLE' in zgrab_scan:
                 zgrab_scan_cmd += ' | tee >({cmd2})'.format(cmd2=generate_zgrab_command(args.executable, zgrab_options, scan.zgrab_common_options, zgrab_global_options, os.path.join(zgrab_scan_dir, 'zgrab2')))
             zgrab_scan_cmd += ' | {cmd}'.format(cmd=generate_zgrab_command(args.executable, zgrab_options, scan.zgrab_common_options, zgrab_global_options, os.path.join(zgrab_scan_dir, 'zgrab')))
