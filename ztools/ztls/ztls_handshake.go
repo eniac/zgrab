@@ -27,6 +27,7 @@ type ClientHello struct {
 	ExtendedRandom  []byte            `json:"extended_random,omitempty"`
 	SessionID       []byte            `json:"session_id,omitempty"`
 	SupportedCurves []keys.TLSCurveID `json:"supported_curves,omitempty"`
+	SupportedPoints []uint8           `json:"supported_points,omitempty"`
 }
 
 type ServerHello struct {
@@ -39,6 +40,7 @@ type ServerHello struct {
 	TicketSupported      bool        `json:"ticket"`
 	SecureRenegotiation  bool        `json:"secure_renegotiation"`
 	HeartbeatSupported   bool        `json:"heartbeat"`
+	SupportedPoints      []uint8     `json:"supported_points,omitempty"`
 	ExtendedRandom       []byte      `json:"extended_random,omitempty"`
 	ExtendedMasterSecret bool        `json:"extended_master_secret"`
 }
@@ -216,6 +218,10 @@ func (m *clientHelloMsg) MakeLog() *ClientHello {
 		ch.SupportedCurves = make([]keys.TLSCurveID, len(m.supportedCurves))
 		copy(ch.SupportedCurves, m.supportedCurves)
 	}
+	if len(m.supportedPoints) > 0 {
+		ch.SupportedPoints = make([]uint8, len(m.supportedPoints))
+		copy(ch.SupportedPoints, m.supportedPoints)
+	}
 	return ch
 }
 
@@ -232,6 +238,10 @@ func (m *serverHelloMsg) MakeLog() *ServerHello {
 	sh.TicketSupported = m.ticketSupported
 	sh.SecureRenegotiation = m.secureRenegotiation
 	sh.HeartbeatSupported = m.heartbeatEnabled
+	if len(m.supportedPoints) > 0 {
+		sh.SupportedPoints = make([]uint8, len(m.supportedPoints))
+		copy(sh.SupportedPoints, m.supportedPoints)
+	}
 	if len(m.extendedRandom) > 0 {
 		sh.ExtendedRandom = make([]byte, len(m.extendedRandom))
 		copy(sh.ExtendedRandom, m.extendedRandom)

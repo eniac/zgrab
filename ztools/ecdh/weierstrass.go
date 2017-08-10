@@ -50,6 +50,7 @@ func (e *weierstrass) Marshal(pub *ECDHPublicKey) []byte {
 func (e *weierstrass) Unmarshal(data []byte) (*ECDHPublicKey, bool) {
 	var key *ECDHPublicKey
 	var x, y *big.Int
+	// TODO: handle compressed points
 
 	x, y = elliptic.Unmarshal(e.curve, data)
 	if x == nil || y == nil {

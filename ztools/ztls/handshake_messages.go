@@ -502,6 +502,7 @@ type serverHelloMsg struct {
 	nextProtos            []string
 	ocspStapling          bool
 	ticketSupported       bool
+	supportedPoints       []uint8
 	secureRenegotiation   bool
 	heartbeatEnabled      bool
 	heartbeatMode         uint8
@@ -522,6 +523,7 @@ func (m *serverHelloMsg) equal(i interface{}) bool {
 		bytes.Equal(m.sessionId, m1.sessionId) &&
 		m.cipherSuite == m1.cipherSuite &&
 		m.compressionMethod == m1.compressionMethod &&
+		bytes.Equal(m.supportedPoints, m1.supportedPoints) &&
 		m.nextProtoNeg == m1.nextProtoNeg &&
 		eqStrings(m.nextProtos, m1.nextProtos) &&
 		m.ocspStapling == m1.ocspStapling &&
@@ -567,6 +569,10 @@ func (m *serverHelloMsg) marshal() []byte {
 		numExtensions++
 	}
 	if m.extendedMasterSecret {
+		numExtensions++
+	}
+	if len(m.supportedPoints) > 0 {
+		extensionsLength += 1 + len(m.supportedPoints)
 		numExtensions++
 	}
 	if numExtensions > 0 {
@@ -654,6 +660,21 @@ func (m *serverHelloMsg) marshal() []byte {
 		z[0] = byte(extensionExtendedMasterSecret >> 8)
 		z[1] = byte(extensionExtendedMasterSecret & 0xff)
 		z = z[4:]
+	}
+	if len(m.supportedPoints) > 0 {
+		// http://tools.ietf.org/html/rfc4492#section-5.5.2
+		z[0] = byte(extensionSupportedPoints >> 8)
+		z[1] = byte(extensionSupportedPoints)
+		l := 1 + len(m.supportedPoints)
+		z[2] = byte(l >> 8)
+		z[3] = byte(l)
+		l--
+		z[4] = byte(l)
+		z = z[5:]
+		for _, pointFormat := range m.supportedPoints {
+			z[0] = byte(pointFormat)
+			z = z[1:]
+		}
 	}
 
 	m.raw = x
@@ -745,6 +766,17 @@ func (m *serverHelloMsg) unmarshal(data []byte) bool {
 		case extensionHeartbeat:
 			m.heartbeatEnabled = true
 			m.heartbeatMode = data[0]
+		case extensionSupportedPoints:
+			// http://tools.ietf.org/html/rfc4492#section-5.5.2
+			if length < 1 {
+				return false
+			}
+			l := int(data[0])
+			if length != l+1 {
+				return false
+			}
+			m.supportedPoints = make([]uint8, l)
+			copy(m.supportedPoints, data[1:])
 		case extensionExtendedRandom:
 			m.extendedRandomEnabled = true
 			if length < 3 {
