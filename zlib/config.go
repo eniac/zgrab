@@ -127,6 +127,7 @@ type Config struct {
 	ExtendedMasterSecret bool
 	TLSVerbose           bool
 	CurvePreferences     string
+	PointPreferences     string
 
 	// SSH
 	SSH SSHScanConfig

@@ -45,13 +45,14 @@ func (c *Conn) clientHandshake() error {
 	c.heartbleedLog = new(Heartbleed)
 
 	hello := &clientHelloMsg{
-		vers:                 c.config.maxVersion(),
-		compressionMethods:   []uint8{compressionNone},
-		random:               make([]byte, 32),
-		ocspStapling:         true,
-		serverName:           c.config.ServerName,
-		supportedCurves:      c.config.curvePreferences(),
-		supportedPoints:      []uint8{pointFormatUncompressed},
+		vers:               c.config.maxVersion(),
+		compressionMethods: []uint8{compressionNone},
+		random:             make([]byte, 32),
+		ocspStapling:       true,
+		serverName:         c.config.ServerName,
+		supportedCurves:    c.config.curvePreferences(),
+		supportedPoints:    c.config.pointPreferences(),
+		//supportedPoints:      []uint8{pointFormatUncompressed},
 		nextProtoNeg:         len(c.config.NextProtos) > 0,
 		secureRenegotiation:  true,
 		extendedMasterSecret: c.config.maxVersion() >= VersionTLS10 && c.config.ExtendedMasterSecret,

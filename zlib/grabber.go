@@ -325,6 +325,9 @@ func makeGrabber(config *Config) func(*Conn) error {
 		if len(config.CurvePreferences) > 0 {
 			c.CurvePreferences = config.CurvePreferences
 		}
+		if len(config.PointPreferences) > 0 {
+			c.PointPreferences = config.PointPreferences
+		}
 
 		if config.SSH.SSH {
 			c.sshScan = &config.SSH

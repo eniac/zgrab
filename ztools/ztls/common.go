@@ -95,7 +95,9 @@ const (
 // TLS Elliptic Curve Point Formats
 // http://www.iana.org/assignments/tls-parameters/tls-parameters.xml#tls-parameters-9
 const (
-	pointFormatUncompressed uint8 = 0
+	pointFormatUncompressed    uint8 = 0
+	pointFormatCompressedPrime uint8 = 1
+	pointFormatCompressedChar2 uint8 = 2
 )
 
 // TLS CertificateStatusType (RFC 3546)
@@ -319,6 +321,8 @@ type Config struct {
 	// be used.
 	CurvePreferences []keys.TLSCurveID
 
+	PointPreferences []uint8
+
 	serverInitOnce sync.Once // guards calling (*Config).serverInit
 
 	ForceSuites bool
@@ -425,6 +429,35 @@ func (c *Config) curvePreferences() []keys.TLSCurveID {
 		return defaultCurvePreferences
 	}
 	return c.CurvePreferences
+}
+
+var defaultPointPreferences = []uint8{pointFormatUncompressed}
+var allPointPreferences = []uint8{pointFormatUncompressed, pointFormatCompressedPrime, pointFormatCompressedChar2}
+
+func (c *Config) SetPointPreferences(pref string) {
+	if pref == "all" {
+		c.PointPreferences = allPointPreferences
+	} else if pref == "default" {
+		c.PointPreferences = defaultPointPreferences
+	} else {
+		spl := strings.Split(pref, ",")
+		if len(spl) > 0 {
+			for _, str := range spl {
+				if id, err := strconv.ParseUint(str, 10, 8); err == nil {
+					c.PointPreferences = append(c.PointPreferences, uint8(id))
+				} else {
+					panic("unable to parse point ID")
+				}
+			}
+		}
+	}
+}
+
+func (c *Config) pointPreferences() []uint8 {
+	if c == nil || len(c.PointPreferences) == 0 {
+		return defaultPointPreferences
+	}
+	return c.PointPreferences
 }
 
 // mutualVersion returns the protocol version to use given the advertised

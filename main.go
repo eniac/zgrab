@@ -111,6 +111,8 @@ func init() {
 
 	flag.StringVar(&config.CurvePreferences, "curve-preferences", "default", "'all', 'default', or comma-separated list of preferred curve ids")
 
+	flag.StringVar(&config.PointPreferences, "point-preferences", "default", "'default', or comma-separated list of preferred point format ids")
+
 	flag.BoolVar(&config.Heartbleed, "heartbleed", false, "Check if server is vulnerable to Heartbleed (implies --tls)")
 
 	flag.BoolVar(&config.GatherSessionTicket, "tls-session-ticket", false, "Send support for TLS Session Tickets and output ticket if presented")

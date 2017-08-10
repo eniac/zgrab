@@ -70,6 +70,7 @@ type Conn struct {
 	CipherSuites              []uint16
 	ForceSuites               bool
 	CurvePreferences          string
+	PointPreferences          string
 	noSNI                     bool
 	extendedRandom            bool
 	gatherSessionTicket       bool
@@ -299,6 +300,7 @@ func (c *Conn) TLSHandshake() error {
 	tlsConfig.ForceSuites = c.ForceSuites
 	tlsConfig.CipherSuites = c.CipherSuites
 	tlsConfig.SetCurvePreferences(c.CurvePreferences)
+	tlsConfig.SetPointPreferences(c.PointPreferences)
 	if !c.noSNI && c.domain != "" {
 		tlsConfig.ServerName = c.domain
 	}
