@@ -6,6 +6,7 @@ package client
 import (
 	"bytes"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -15,10 +16,9 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-	"crypto/tls"
 
-	"github.com/zmap/zgrab/ztools/zct"
 	"github.com/mreiferson/go-httpclient"
+	"github.com/zmap/zgrab/ztools/zct"
 	"golang.org/x/net/context"
 )
 
@@ -119,7 +119,7 @@ func New(uri string) *LogClient {
 		ResponseHeaderTimeout: 30 * time.Second,
 		MaxIdleConnsPerHost:   10,
 		DisableKeepAlives:     false,
-		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 	}
 	c.httpClient = &http.Client{Transport: transport}
 	return &c

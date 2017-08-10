@@ -15,8 +15,8 @@
 package keys
 
 import (
-	"crypto/elliptic"
 	"encoding/json"
+	"github.com/eniac/zgrab/ztools/ecdh"
 	"math/big"
 )
 
@@ -33,7 +33,7 @@ type ECDHPrivateParams struct {
 // time, it is unlikely that both ServerPrivate and ClientPrivate will be non-nil.
 type ECDHParams struct {
 	TLSCurveID    TLSCurveID         `json:"curve_id,omitempty"`
-	Curve         elliptic.Curve     `json:"-"`
+	Curve         ecdh.Curve         `json:"-"`
 	ServerPublic  *ECPoint           `json:"server_public,omitempty"`
 	ClientPublic  *ECPoint           `json:"client_public,omitempty"`
 	ClientPrivate *ECDHPrivateParams `json:"client_private,omitempty"`

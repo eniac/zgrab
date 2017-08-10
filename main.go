@@ -109,7 +109,7 @@ func init() {
 	flag.BoolVar(&config.SafariOnly, "safari-ciphers", false, "Send Safari Ordered Cipher Suites")
 	flag.BoolVar(&config.SafariNoDHE, "safari-no-dhe-ciphers", false, "Send Safari ciphers minus DHE suites")
 
-    flag.StringVar(&config.CurvePreferences, "curve-preferences", "default", "'all', 'default', or comma-separated list of preferred curve ids")
+	flag.StringVar(&config.CurvePreferences, "curve-preferences", "default", "'all', 'default', or comma-separated list of preferred curve ids")
 
 	flag.BoolVar(&config.Heartbleed, "heartbleed", false, "Check if server is vulnerable to Heartbleed (implies --tls)")
 

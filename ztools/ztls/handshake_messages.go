@@ -5,8 +5,8 @@
 package ztls
 
 import (
-    "bytes"
-    "github.com/zmap/zgrab/ztools/keys"
+	"bytes"
+	"github.com/zmap/zgrab/ztools/keys"
 )
 
 type clientHelloMsg struct {

@@ -15,20 +15,20 @@
 package main
 
 import (
-	"encoding/json"
-	"io"
-	"os"
 	"bytes"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/zmap/zgrab/ztools/x509"
 )
 
 func exitErr(a ...interface{}) {
 	fmt.Fprint(os.Stderr, "FATAL: ")
-    fmt.Fprintln(os.Stderr, a...)
-    os.Exit(1)
+	fmt.Fprintln(os.Stderr, a...)
+	os.Exit(1)
 }
 
 func main() {

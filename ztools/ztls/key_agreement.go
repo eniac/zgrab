@@ -8,7 +8,6 @@ import (
 	"crypto"
 	"crypto/dsa"
 	"crypto/ecdsa"
-	"crypto/elliptic"
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
@@ -19,9 +18,9 @@ import (
 	"io"
 	"math/big"
 
-	"github.com/zmap/zgrab/ztools/x509"
+	"github.com/eniac/zgrab/ztools/ecdh"
 	"github.com/zmap/zgrab/ztools/keys"
-    "github.com/keybase/go-crypto/brainpool"
+	"github.com/zmap/zgrab/ztools/x509"
 )
 
 var errClientKeyExchange = errors.New("tls: invalid ClientKeyExchange message")
@@ -271,28 +270,40 @@ func pickTLS12HashForSignature(sigType uint8, clientList, serverList []signature
 	return 0, errors.New("tls: client doesn't support any common hash functions")
 }
 
-func curveForCurveID(id keys.TLSCurveID) (elliptic.Curve, bool) {
+func curveForCurveID(id keys.TLSCurveID) (ecdh.Curve, bool) {
 	switch id {
-//    case keys.BrainpoolP256t1:
-//        return brainpool.P256t1(), true
-    case keys.BrainpoolP256r1:
-        return brainpool.P256r1(), true
-//    case keys.BrainpoolP384t1:
-//        return brainpool.P384t1(), true
-    case keys.BrainpoolP384r1:
-        return brainpool.P384r1(), true
-//    case keys.BrainpoolP512t1:
-//        return brainpool.P512t1(), true
-    case keys.BrainpoolP512r1:
-        return brainpool.P512r1(), true
-    case keys.Secp224r1:
-        return elliptic.P224(), true
+	case keys.Secp160r1:
+		return ecdh.P160r1(), true
+	case keys.Secp160k1:
+		return ecdh.P160k1(), true
+	case keys.Secp160r2:
+		return ecdh.P160r1(), true
+	case keys.Secp192r1:
+		return ecdh.P192r1(), true
+	case keys.Secp192k1:
+		return ecdh.P192k1(), true
+	case keys.Secp224k1:
+		return ecdh.P224k1(), true
+	case keys.Secp224r1:
+		return ecdh.P224r1(), true
+	case keys.Secp256k1:
+		return ecdh.P256k1(), true
 	case keys.Secp256r1:
-		return elliptic.P256(), true
+		return ecdh.P256r1(), true
 	case keys.Secp384r1:
-		return elliptic.P384(), true
+		return ecdh.P384r1(), true
 	case keys.Secp521r1:
-		return elliptic.P521(), true
+		return ecdh.P521r1(), true
+	case keys.BrainpoolP256r1:
+		return ecdh.BrainpoolP256r1(), true
+	case keys.BrainpoolP384r1:
+		return ecdh.BrainpoolP384r1(), true
+	case keys.BrainpoolP512r1:
+		return ecdh.BrainpoolP512r1(), true
+	case keys.X25519:
+		return ecdh.X25519(), true
+	case keys.X448:
+		return ecdh.X448(), true
 	default:
 		return nil, false
 	}
@@ -476,15 +487,13 @@ func (ka *signedKeyAgreement) verifyParameters(config *Config, clientHello *clie
 // pre-master secret is then calculated using ECDH. The signature may
 // either be ECDSA or RSA.
 type ecdheKeyAgreement struct {
-	auth          keyAgreementAuthentication
-	privateKey    []byte
-	curve         elliptic.Curve
-	x, y          *big.Int
-	verifyError   error
-	curveID       uint16
-	clientPrivKey []byte
-	clientX       *big.Int
-	clientY       *big.Int
+	auth            keyAgreementAuthentication
+	privateKey      *ecdh.ECDHPrivateKey
+	serverPublicKey *ecdh.ECDHPublicKey
+	clientPublicKey *ecdh.ECDHPublicKey
+	curve           ecdh.Curve
+	verifyError     error
+	curveID         uint16
 }
 
 func (ka *ecdheKeyAgreement) generateServerKeyExchange(config *Config, cert *Certificate, clientHello *clientHelloMsg, hello *serverHelloMsg) (*serverKeyExchangeMsg, error) {
@@ -511,13 +520,13 @@ NextCandidate:
 		return nil, errors.New("tls: preferredCurves includes unsupported curve")
 	}
 
-	var x, y *big.Int
+	var pub *ecdh.ECDHPublicKey
 	var err error
-	ka.privateKey, x, y, err = elliptic.GenerateKey(ka.curve, config.rand())
+	ka.privateKey, pub, err = ka.curve.GenerateKey(config.rand())
 	if err != nil {
 		return nil, err
 	}
-	ecdhePublic := elliptic.Marshal(ka.curve, x, y)
+	ecdhePublic := ka.curve.Marshal(pub)
 
 	// http://tools.ietf.org/html/rfc4492#section-5.4
 	serverECDHParams := make([]byte, 1+2+1+len(ecdhePublic))
@@ -534,14 +543,14 @@ func (ka *ecdheKeyAgreement) processClientKeyExchange(config *Config, cert *Cert
 	if len(ckx.ciphertext) == 0 || int(ckx.ciphertext[0]) != len(ckx.ciphertext)-1 {
 		return nil, errClientKeyExchange
 	}
-	x, y := elliptic.Unmarshal(ka.curve, ckx.ciphertext[1:])
-	if x == nil {
+	publicKey, ok := ka.curve.Unmarshal(ckx.ciphertext[1:])
+	if !ok {
 		return nil, errClientKeyExchange
 	}
-	x, _ = ka.curve.ScalarMult(x, y, ka.privateKey)
-	preMasterSecret := make([]byte, (ka.curve.Params().BitSize+7)>>3)
-	xBytes := x.Bytes()
-	copy(preMasterSecret[len(preMasterSecret)-len(xBytes):], xBytes)
+	preMasterSecret, err := ka.curve.GenerateSharedSecret(ka.privateKey, publicKey)
+	if err != nil {
+		return nil, err
+	}
 
 	return preMasterSecret, nil
 }
@@ -565,10 +574,11 @@ func (ka *ecdheKeyAgreement) processServerKeyExchange(config *Config, clientHell
 	if publicLen+4 > len(skx.key) {
 		return errServerKeyExchange
 	}
-	ka.x, ka.y = elliptic.Unmarshal(ka.curve, skx.key[4:4+publicLen])
-	if ka.x == nil {
+	ka.serverPublicKey, ok = ka.curve.Unmarshal(skx.key[4 : 4+publicLen])
+	if !ok {
 		return errServerKeyExchange
 	}
+
 	serverECDHParams := skx.key[:4+publicLen]
 
 	sig := skx.key[4+publicLen:]
@@ -580,60 +590,77 @@ func (ka *ecdheKeyAgreement) processServerKeyExchange(config *Config, clientHell
 }
 
 func (ka *ecdheKeyAgreement) generateClientKeyExchange(config *Config, clientHello *clientHelloMsg, cert *x509.Certificate) ([]byte, *clientKeyExchangeMsg, error) {
+	var err error
+	var preMasterSecret []byte
+
 	if ka.curve == nil {
 		return nil, nil, errors.New("missing ServerKeyExchange message")
 	}
-	priv, mx, my, err := elliptic.GenerateKey(ka.curve, config.rand())
-	if err != nil {
-		return nil, nil, err
+
+	switch config.TLSKexConfig {
+	case "256_ECP_INVALID_S5": // NIST-P256 generator of subgroup of order 5 on curve w/ B-1
+		ka.privateKey = nil
+		mx, _ := new(big.Int).SetString("86765160823711241075790919525606906052464424178558764461827806608937748883041", 10)
+		my, _ := new(big.Int).SetString("62096069626295534024197897036720226401219594482857127378802405572766226928611", 10)
+		ka.clientPublicKey = &ecdh.ECDHPublicKey{
+			X: mx,
+			Y: my,
+		}
+		preMasterSecret = mx.Bytes() // set the premaster secret to a point in the subgroup
+	case "256_ECP_TWIST_S5": // NIST-P256 generator of subgroup of order 5 on twist
+		// y^2 = x^3 + 64540953657701435357043644561909631465859193840763101878720769919119982834454*x + 21533133778103722695369883733312533132949737997864576898233410179589774724054
+		ka.privateKey = nil
+		mx, _ := new(big.Int).SetString("75610932410248387784210576211184530780201393864652054865721797292564276389325", 10)
+		my, _ := new(big.Int).SetString("30046858919395540206086570437823256496220553255320964836453418613861962163895", 10)
+		ka.clientPublicKey = &ecdh.ECDHPublicKey{
+			X: mx,
+			Y: my,
+		}
+		preMasterSecret = mx.Bytes() // set the premaster secret to a point in the subgroup
+	case "224_ECP_INVALID_S13": // NIST-P224 generator of subgroup of order 13 on curve w/ B-1
+		ka.privateKey = nil
+		mx, _ := new(big.Int).SetString("1234919426772886915432358412587735557527373236174597031415308881584", 10)
+		my, _ := new(big.Int).SetString("218592750580712164156183367176268299828628545379017213517316023994", 10)
+		ka.clientPublicKey = &ecdh.ECDHPublicKey{
+			X: mx,
+			Y: my,
+		}
+		preMasterSecret = mx.Bytes() // set the premaster secret to a point in the subgroup
+	case "224_ECP_TWIST_S11": // NIST-P224 generator of subgroup of order 11 on twist
+		ka.privateKey = nil
+		mx, _ := new(big.Int).SetString("21219928721835262216070635629075256199931199995500865785214182108232", 10)
+		my, _ := new(big.Int).SetString("2486431965114139990348241493232938533843075669604960787364227498903", 10)
+		ka.clientPublicKey = &ecdh.ECDHPublicKey{
+			X: mx,
+			Y: my,
+		}
+		preMasterSecret = mx.Bytes() // set the premaster secret to a point in the subgroup
+	case "FORCE": // use the client's preferred curve regardless of the server's parameters
+		if len(clientHello.supportedCurves) < 1 {
+			return nil, nil, err
+		}
+		ka.curveID = uint16(clientHello.supportedCurves[0])
+		ka.curve, _ = curveForCurveID(keys.TLSCurveID(ka.curveID))
+		fallthrough
+	case "":
+		ka.privateKey, ka.clientPublicKey, err = ka.curve.GenerateKey(config.rand())
+		if err != nil {
+			return nil, nil, err
+		}
+		preMasterSecret, err = ka.curve.GenerateSharedSecret(ka.privateKey, ka.serverPublicKey)
+		if err != nil {
+			return nil, nil, err
+		}
+	default:
+		panic("unrecognized tls-kex-config")
 	}
 
-	ka.clientPrivKey = make([]byte, len(priv))
-	copy(ka.clientPrivKey, priv)
-	ka.clientX = mx
-	ka.clientY = my
-
-	x, _ := ka.curve.ScalarMult(ka.x, ka.y, priv)
-
-    switch config.TLSKexConfig {
-    case "":
-    case "256_ECP_INVALID_S5":
-        // NIST-P256 generator of subgroup of order 5 on curve w/ B-1
-        x, _ = new(big.Int).SetString("86765160823711241075790919525606906052464424178558764461827806608937748883041", 10)
-        mx, _ = new(big.Int).SetString("86765160823711241075790919525606906052464424178558764461827806608937748883041", 10)
-        my, _ = new(big.Int).SetString("62096069626295534024197897036720226401219594482857127378802405572766226928611", 10)
-    case "256_ECP_TWIST_S5":
-        // NIST-P256 generator of subgroup of order 5 on twist
-        // y^2 = x^3 + 64540953657701435357043644561909631465859193840763101878720769919119982834454*x + 21533133778103722695369883733312533132949737997864576898233410179589774724054
-        x, _ = new(big.Int).SetString("75610932410248387784210576211184530780201393864652054865721797292564276389325", 10)
-        mx, _ = new(big.Int).SetString("75610932410248387784210576211184530780201393864652054865721797292564276389325", 10)
-        my, _ = new(big.Int).SetString("30046858919395540206086570437823256496220553255320964836453418613861962163895", 10)
-    case "224_ECP_INVALID_S13":
-    // NIST-P224 generator of subgroup of order 13 on curve w/ B-1
-        x, _ = new(big.Int).SetString("1234919426772886915432358412587735557527373236174597031415308881584", 10)
-        mx, _ = new(big.Int).SetString("1234919426772886915432358412587735557527373236174597031415308881584", 10)
-        my, _ = new(big.Int).SetString("218592750580712164156183367176268299828628545379017213517316023994", 10)
-        case "224_ECP_TWIST_S11":
-        // NIST-P224 generator of subgroup of order 11 on twist
-        x, _ = new(big.Int).SetString("21219928721835262216070635629075256199931199995500865785214182108232", 10)
-        mx, _ = new(big.Int).SetString("21219928721835262216070635629075256199931199995500865785214182108232", 10)
-        my, _ = new(big.Int).SetString("2486431965114139990348241493232938533843075669604960787364227498903", 10)
-    default:
-        panic("unrecognized tls-kex-config")
-    }
-
-	preMasterSecret := make([]byte, (ka.curve.Params().BitSize+7)>>3)
-	xBytes := x.Bytes()
-	copy(preMasterSecret[len(preMasterSecret)-len(xBytes):], xBytes)
-
-	serialized := elliptic.Marshal(ka.curve, mx, my)
+	serialized := ka.curve.Marshal(ka.clientPublicKey)
 
 	ckx := new(clientKeyExchangeMsg)
-	var body []byte
 	ckx.ciphertext = make([]byte, 1+len(serialized))
 	ckx.ciphertext[0] = byte(len(serialized))
-	body = ckx.ciphertext[1:]
-	copy(body, serialized)
+	copy(ckx.ciphertext[1:], serialized)
 
 	return preMasterSecret, ckx, nil
 }

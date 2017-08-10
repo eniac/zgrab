@@ -45,6 +45,8 @@ const (
 	BrainpoolP256r1 TLSCurveID = 26
 	BrainpoolP384r1 TLSCurveID = 27
 	BrainpoolP512r1 TLSCurveID = 28
+	X25519          TLSCurveID = 29
+	X448            TLSCurveID = 30
 )
 
 var ecIDToName map[TLSCurveID]string
@@ -80,6 +82,8 @@ func init() {
 	ecIDToName[BrainpoolP256r1] = "brainpoolp256r1"
 	ecIDToName[BrainpoolP384r1] = "brainpoolp384r1"
 	ecIDToName[BrainpoolP512r1] = "brainpoolp512r1"
+	ecIDToName[X25519] = "x25519"
+	ecIDToName[X448] = "x448"
 
 	ecNameToID = make(map[string]TLSCurveID, 64)
 	ecNameToID["sect163k1"] = Sect163k1
@@ -110,4 +114,6 @@ func init() {
 	ecNameToID["brainpoolp256r1"] = BrainpoolP256r1
 	ecNameToID["brainpoolp384r1"] = BrainpoolP384r1
 	ecNameToID["brainpoolp512r1"] = BrainpoolP512r1
+	ecNameToID["x25519"] = X25519
+	ecNameToID["x448"] = X448
 }

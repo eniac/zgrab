@@ -507,7 +507,7 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 		return err
 	}
 
-    // TEST
+	// TEST
 	hs.preMasterSecret = make([]byte, len(preMasterSecret))
 	copy(hs.preMasterSecret, preMasterSecret)
 	c.handshakeLog.KeyMaterial = hs.MakeLog()

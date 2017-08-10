@@ -55,8 +55,8 @@ type Conn struct {
 
 	grabData GrabData
 
-    // TLS Key Exchange Config
-    TLSKexConfig string
+	// TLS Key Exchange Config
+	TLSKexConfig string
 
 	// Max TLS version
 	maxTlsVersion uint16
@@ -69,7 +69,7 @@ type Conn struct {
 
 	CipherSuites              []uint16
 	ForceSuites               bool
-    CurvePreferences          string
+	CurvePreferences          string
 	noSNI                     bool
 	extendedRandom            bool
 	gatherSessionTicket       bool
@@ -292,13 +292,13 @@ func (c *Conn) TLSHandshake() error {
 	tlsConfig.InsecureSkipVerify = true
 	tlsConfig.MinVersion = ztls.VersionSSL30
 	tlsConfig.MaxVersion = c.maxTlsVersion
-    tlsConfig.TLSKexConfig = c.TLSKexConfig
+	tlsConfig.TLSKexConfig = c.TLSKexConfig
 	tlsConfig.RootCAs = c.caPool
 	tlsConfig.HeartbeatEnabled = true
 	tlsConfig.ClientDSAEnabled = true
 	tlsConfig.ForceSuites = c.ForceSuites
 	tlsConfig.CipherSuites = c.CipherSuites
-    tlsConfig.SetCurvePreferences(c.CurvePreferences)
+	tlsConfig.SetCurvePreferences(c.CurvePreferences)
 	if !c.noSNI && c.domain != "" {
 		tlsConfig.ServerName = c.domain
 	}

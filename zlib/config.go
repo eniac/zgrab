@@ -107,7 +107,7 @@ type Config struct {
 
 	// TLS
 	TLS                  bool
-    TLSKexConfig         string
+	TLSKexConfig         string
 	TLSVersion           uint16
 	Heartbleed           bool
 	RootCAPool           *x509.CertPool
@@ -126,7 +126,7 @@ type Config struct {
 	GatherSessionTicket  bool
 	ExtendedMasterSecret bool
 	TLSVerbose           bool
-    CurvePreferences     string
+	CurvePreferences     string
 
 	// SSH
 	SSH SSHScanConfig

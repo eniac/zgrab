@@ -53,13 +53,15 @@ func (ka *ecdheKeyAgreement) ECDHParams() *keys.ECDHParams {
 	out := new(keys.ECDHParams)
 	out.TLSCurveID = keys.TLSCurveID(ka.curveID)
 	out.ServerPublic = &keys.ECPoint{}
-	if ka.x != nil {
-		out.ServerPublic.X = new(big.Int)
-		out.ServerPublic.X.Set(ka.x)
-	}
-	if ka.y != nil {
-		out.ServerPublic.Y = new(big.Int)
-		out.ServerPublic.Y.Set(ka.y)
+	if ka.serverPublicKey != nil {
+		if ka.serverPublicKey.X != nil {
+			out.ServerPublic.X = new(big.Int)
+			out.ServerPublic.X.Set(ka.serverPublicKey.X)
+		}
+		if ka.serverPublicKey.Y != nil {
+			out.ServerPublic.Y = new(big.Int)
+			out.ServerPublic.Y.Set(ka.serverPublicKey.Y)
+		}
 	}
 	return out
 }
@@ -68,19 +70,23 @@ func (ka *ecdheKeyAgreement) ClientECDHParams() *keys.ECDHParams {
 	out := new(keys.ECDHParams)
 	out.TLSCurveID = keys.TLSCurveID(ka.curveID)
 	out.ClientPublic = &keys.ECPoint{}
-	if ka.x != nil {
-		out.ClientPublic.X = new(big.Int)
-		out.ClientPublic.X.Set(ka.clientX)
-	}
-	if ka.y != nil {
-		out.ClientPublic.Y = new(big.Int)
-		out.ClientPublic.Y.Set(ka.clientY)
+	if ka.clientPublicKey != nil {
+		if ka.clientPublicKey.X != nil {
+			out.ClientPublic.X = new(big.Int)
+			out.ClientPublic.X.Set(ka.clientPublicKey.X)
+		}
+		if ka.clientPublicKey.Y != nil {
+			out.ClientPublic.Y = new(big.Int)
+			out.ClientPublic.Y.Set(ka.clientPublicKey.Y)
+		}
 	}
 
-	out.ClientPrivate = new(keys.ECDHPrivateParams)
-	out.ClientPrivate.Length = len(ka.clientPrivKey)
-	out.ClientPrivate.Value = make([]byte, len(ka.clientPrivKey))
-	copy(out.ClientPrivate.Value, ka.clientPrivKey)
+	if ka.privateKey != nil {
+		out.ClientPrivate = new(keys.ECDHPrivateParams)
+		out.ClientPrivate.Length = len(ka.privateKey.D)
+		out.ClientPrivate.Value = make([]byte, len(ka.privateKey.D))
+		copy(out.ClientPrivate.Value, ka.privateKey.D)
+	}
 	return out
 }
 
