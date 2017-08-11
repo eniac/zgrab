@@ -1,4 +1,4 @@
-// Parameters for the weierstrass elliptic curves
+// Support for short Weierstrass elliptic curves
 // http://www.secg.org/SEC2-Ver-1.0.pdf
 package ecdh
 
@@ -85,23 +85,9 @@ var (
 )
 
 func initAll() {
-	initP160k1()
 	initP160r1()
 	initP160r2()
-	initP192k1()
 	initP192r1()
-	initP224k1()
-	initP256k1()
-}
-
-func initP160k1() {
-	p160k1 = new(elliptic.CurveParams)
-	p160k1.P, _ = new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFAC73", 16)
-	p160k1.N, _ = new(big.Int).SetString("0100000000000000000001B8FA16DFAB9ACA16B6B3", 16)
-	p160k1.B, _ = new(big.Int).SetString("0000000000000000000000000000000000000007", 16)
-	p160k1.Gx, _ = new(big.Int).SetString("3B4C382CE37AA192A4019E763036F4F5DD4D7EBB", 16)
-	p160k1.Gy, _ = new(big.Int).SetString("938CF935318FDCED6BC28286531733C3F03C4FEE", 16)
-	p160k1.BitSize = 160
 }
 
 func initP160r1() {
@@ -124,16 +110,6 @@ func initP160r2() {
 	p160r2.BitSize = 160
 }
 
-func initP192k1() {
-	p192k1 = new(elliptic.CurveParams)
-	p192k1.P, _ = new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFEE37", 16)
-	p192k1.N, _ = new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFE26F2FC170F69466A74DEFD8D", 16)
-	p192k1.B, _ = new(big.Int).SetString("000000000000000000000000000000000000000000000003", 16)
-	p192k1.Gx, _ = new(big.Int).SetString("DB4FF10EC057E9AE26B07D0280B7F4341DA5D1B1EAE06C7D", 16)
-	p192k1.Gy, _ = new(big.Int).SetString("9B2F2F6D9C5628A7844163D015BE86344082AA88D95E2F9D", 16)
-	p192k1.BitSize = 192
-}
-
 func initP192r1() {
 	p192r1 = new(elliptic.CurveParams)
 	p192r1.P, _ = new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFF", 16)
@@ -142,31 +118,6 @@ func initP192r1() {
 	p192r1.Gx, _ = new(big.Int).SetString("188DA80EB03090F67CBF20EB43A18800F4FF0AFD82FF1012", 16)
 	p192r1.Gy, _ = new(big.Int).SetString("07192B95FFC8DA78631011ED6B24CDD573F977A11E794811", 16)
 	p192r1.BitSize = 192
-}
-
-func initP224k1() {
-	p224k1 = new(elliptic.CurveParams)
-	p224k1.P, _ = new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFE56D", 16)
-	p224k1.N, _ = new(big.Int).SetString("010000000000000000000000000001DCE8D2EC6184CAF0A971769FB1F7", 16)
-	p224k1.B, _ = new(big.Int).SetString("00000000000000000000000000000000000000000000000000000005", 16)
-	p224k1.Gx, _ = new(big.Int).SetString("A1455B334DF099DF30FC28A169A467E9E47075A90F7E650EB6B7A45C", 16)
-	p224k1.Gy, _ = new(big.Int).SetString("7E089FED7FBA344282CAFBD6F7E319F7C0B0BD59E2CA4BDB556D61A5", 16)
-	p224k1.BitSize = 224
-}
-
-func initP256k1() {
-	p256k1 = new(elliptic.CurveParams)
-	p256k1.P, _ = new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16)
-	p256k1.N, _ = new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16)
-	p256k1.B, _ = new(big.Int).SetString("0000000000000000000000000000000000000000000000000000000000000007", 16)
-	p256k1.Gx, _ = new(big.Int).SetString("79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798", 16)
-	p256k1.Gy, _ = new(big.Int).SetString("483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8", 16)
-	p256k1.BitSize = 256
-}
-
-func P160k1() Curve {
-	once.Do(initAll)
-	return NewWeierstrass(p160k1)
 }
 
 func P160r1() Curve {
@@ -179,28 +130,13 @@ func P160r2() Curve {
 	return NewWeierstrass(p160r2)
 }
 
-func P192k1() Curve {
-	once.Do(initAll)
-	return NewWeierstrass(p192k1)
-}
-
 func P192r1() Curve {
 	once.Do(initAll)
 	return NewWeierstrass(p192r1)
 }
 
-func P224k1() Curve {
-	once.Do(initAll)
-	return NewWeierstrass(p224k1)
-}
-
 func P224r1() Curve {
 	return NewWeierstrass(elliptic.P224())
-}
-
-func P256k1() Curve {
-	once.Do(initAll)
-	return NewWeierstrass(p256k1)
 }
 
 func P256r1() Curve {

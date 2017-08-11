@@ -27,57 +27,57 @@ zmap_global_options = {
 zgrab_global_options = ' --ecdhe-ciphers --tls-verbose --gomaxprocs 24 --senders 10000'
 
 scans = [
-        Config(name='STARTTLS-25', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '25',
-                },
-            zgrab_common_options=' --starttls --port 25 --smtp --ehlo "research-scan.cis.upenn.edu" --timeout 30',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
-        Config(name='STARTTLS-110', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '110',
-                },
-            zgrab_common_options=' --starttls --port 110 --pop3 --timeout 30',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
-        Config(name='STARTTLS-143', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '143',
-                },
-            zgrab_common_options=' --starttls --port 143 --imap --timeout 30',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
+#        Config(name='STARTTLS-25', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '25',
+#                },
+#            zgrab_common_options=' --starttls --port 25 --smtp --ehlo "research-scan.cis.upenn.edu" --timeout 30',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
+#        Config(name='STARTTLS-110', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '110',
+#                },
+#            zgrab_common_options=' --starttls --port 110 --pop3 --timeout 30',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
+#        Config(name='STARTTLS-143', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '143',
+#                },
+#            zgrab_common_options=' --starttls --port 143 --imap --timeout 30',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
         Config(name='TLS-443', 
             zmap_options={
                 'probe-module': 'tcp_synscan',
@@ -86,219 +86,229 @@ scans = [
             zgrab_common_options=' --tls --port 443',
             zgrab_scans=[
                 ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
+                ('ECDH_ANDROID', ' --curve-preferences 14,13,25,11,12,24,9,10,22,23,8,6,7,20,21,4,5,18,19,1,2,3,15,16,17'),
+                ('160K1_ECP_DOUBLE', ' --curve-preferences 15'),
+                ('160R1_ECP_DOUBLE', ' --curve-preferences 16'),
+                ('256_ECP_INVALID_S5_DOUBLE', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+                ('X25519_DOUBLE', ' --curve-preferences 29'),
+                ('X25519_INVALID_S8', ' --curve-preferences 29 --tls-kex-config X25519_INVALID_S8'),
+                ('X448', ' --curve-preferences 30'),
+                ('256_ECP_TWIST_S5_COMPRESS', ' --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5,COMPRESS'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ('EXPLICIT_PRIME_CURVE', ' --curve-preferences 65281'),
+#                ('EXPLICIT_CHAR2_CURVE', ' --curve-preferences 65282'),
                 ]
             ),
-        Config(name='TLS-465', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '465',
-                },
-            zgrab_common_options=' --tls --port 465',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
-        Config(name='TLS-563', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '563',
-                },
-            zgrab_common_options=' --tls --port 563',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
-        Config(name='STARTTLS-587', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '587',
-                },
-            zgrab_common_options=' --starttls --port 587 --smtp --ehlo "research-scan.cis.upenn.edu" --timeout 30',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
-        Config(name='TLS-636', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '636',
-                },
-            zgrab_common_options=' --tls --port 636',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
-        Config(name='TLS-853', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '853',
-                },
-            zgrab_common_options=' --tls --port 853',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
-        Config(name='TLS-989', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '989',
-                },
-            zgrab_common_options=' --tls --port 989',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
-        Config(name='TLS-990', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '990',
-                },
-            zgrab_common_options=' --tls --port 990',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
-        Config(name='TLS-992', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '992',
-                },
-            zgrab_common_options=' --tls --port 992',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
-        Config(name='TLS-993', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '993',
-                },
-            zgrab_common_options=' --tls --port 993',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
-        Config(name='TLS-994', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '994',
-                },
-            zgrab_common_options=' --tls --port 994',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
-        Config(name='TLS-995', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '995',
-                },
-            zgrab_common_options=' --tls --port 995',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
-        Config(name='TLS-8443', 
-            zmap_options={
-                'probe-module': 'tcp_synscan',
-                'target-port': '8443',
-                },
-            zgrab_common_options=' --tls --port 8443',
-            zgrab_scans=[
-                ('ECDH_BASELINE', ' --curve-preferences all'),
-                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
-                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --curve-preferences 21'),
-                ('384_ECP', ' --curve-preferences 24'),
-                ('521_ECP', ' --curve-preferences 25'),
-                ('256_BRAINPOOL', ' --curve-preferences 26'),
-                ]
-            ),
+#        Config(name='TLS-465', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '465',
+#                },
+#            zgrab_common_options=' --tls --port 465',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
+#        Config(name='TLS-563', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '563',
+#                },
+#            zgrab_common_options=' --tls --port 563',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
+#        Config(name='STARTTLS-587', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '587',
+#                },
+#            zgrab_common_options=' --starttls --port 587 --smtp --ehlo "research-scan.cis.upenn.edu" --timeout 30',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
+#        Config(name='TLS-636', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '636',
+#                },
+#            zgrab_common_options=' --tls --port 636',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
+#        Config(name='TLS-853', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '853',
+#                },
+#            zgrab_common_options=' --tls --port 853',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
+#        Config(name='TLS-989', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '989',
+#                },
+#            zgrab_common_options=' --tls --port 989',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
+#        Config(name='TLS-990', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '990',
+#                },
+#            zgrab_common_options=' --tls --port 990',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
+#        Config(name='TLS-992', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '992',
+#                },
+#            zgrab_common_options=' --tls --port 992',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
+#        Config(name='TLS-993', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '993',
+#                },
+#            zgrab_common_options=' --tls --port 993',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
+#        Config(name='TLS-994', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '994',
+#                },
+#            zgrab_common_options=' --tls --port 994',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
+#        Config(name='TLS-995', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '995',
+#                },
+#            zgrab_common_options=' --tls --port 995',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
+#        Config(name='TLS-8443', 
+#            zmap_options={
+#                'probe-module': 'tcp_synscan',
+#                'target-port': '8443',
+#                },
+#            zgrab_common_options=' --tls --port 8443',
+#            zgrab_scans=[
+#                ('ECDH_BASELINE', ' --curve-preferences all'),
+#                ('256_ECP_DOUBLE', ' --curve-preferences 23'), # double scan to check for repeats
+#                ('256_ECP_TWIST_S5', '  --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --curve-preferences 21'),
+#                ('384_ECP', ' --curve-preferences 24'),
+#                ('521_ECP', ' --curve-preferences 25'),
+#                ('256_BRAINPOOL', ' --curve-preferences 26'),
+#                ]
+#            ),
         ]
 
 
@@ -331,7 +341,7 @@ def check_path(filename, args):
 
 def main(args):
     run_script = open('run_all.sh', 'w')
-    run_script.write('# run with sudo\n')
+    run_script.write('# run "sudo ls" before to temporarily cache credentials\n')
 
     for scan in scans:
         zmap_scan_dir = os.path.join(scan.name)
@@ -355,7 +365,7 @@ def main(args):
             with open(zmap_scan_script, 'w') as f:
                 f.write('zmap -C {c}'.format(c=zmap_scan_conf)) 
                 f.write(' | ztee {r} --success-only > /dev/null\n'.format(r=zmap_scan_results))
-            run_script.write('[ ! -f "{r}" ] && bash {s} || echo "{r} exists, please delete to re-run zmap scan"\n'.format(r=zmap_scan_results, s=zmap_scan_script))
+            run_script.write('[ ! -f "{r}" ] && sudo bash {s} || echo "{r} exists, please delete to re-run zmap scan"\n'.format(r=zmap_scan_results, s=zmap_scan_script))
 
         for zgrab_scan, zgrab_options in scan.zgrab_scans:
             zgrab_scan_dir = os.path.join(zmap_scan_dir, zgrab_scan)
