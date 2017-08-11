@@ -355,22 +355,16 @@ def main(args):
             with open(zmap_scan_script, 'w') as f:
                 f.write('zmap -C {c}'.format(c=zmap_scan_conf)) 
                 f.write(' | ztee {r} --success-only > /dev/null\n'.format(r=zmap_scan_results))
-            run_script.write('bash {s}\n'.format(s=zmap_scan_script))
+            run_script.write('[ ! -f "{r}" ] && bash {s} || echo "{r} exists, please delete to re-run zmap scan"\n'.format(r=zmap_scan_results, s=zmap_scan_script))
 
         for zgrab_scan, zgrab_options in scan.zgrab_scans:
             zgrab_scan_dir = os.path.join(zmap_scan_dir, zgrab_scan)
-            if not check_path(zgrab_scan_dir, args):
-                continue
-            try:
-                os.makedirs(zgrab_scan_dir)
-            except Exception:
-                pass
 
             zgrab_scan_cmd = ('cat {r} | ztee /dev/null --success-only | zfilter.py').format(r=zmap_scan_results)
             if 'DOUBLE' in zgrab_scan:
                 zgrab_scan_cmd += ' | tee >({cmd2})'.format(cmd2=generate_zgrab_command(args.executable, zgrab_options, scan.zgrab_common_options, zgrab_global_options, os.path.join(zgrab_scan_dir, 'zgrab2')))
             zgrab_scan_cmd += ' | {cmd}'.format(cmd=generate_zgrab_command(args.executable, zgrab_options, scan.zgrab_common_options, zgrab_global_options, os.path.join(zgrab_scan_dir, 'zgrab')))
-            run_script.write('echo {n} && time {c}\n'.format(n=zgrab_scan, c=zgrab_scan_cmd))
+            run_script.write('mkdir -p {d} && echo {n} && time {c}\n'.format(d=zgrab_scan_dir, n=zgrab_scan, c=zgrab_scan_cmd))
     run_script.close()
 
 if __name__ == "__main__":

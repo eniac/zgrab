@@ -403,7 +403,7 @@ func (c *Config) maxVersion() uint16 {
 }
 
 var defaultCurvePreferences = []keys.TLSCurveID{keys.Secp256r1, keys.Secp384r1, keys.Secp521r1}
-var allCurvePreferences = []keys.TLSCurveID{keys.Secp224r1, keys.Secp256r1, keys.Secp384r1, keys.Secp521r1, keys.BrainpoolP256r1, keys.BrainpoolP384r1, keys.BrainpoolP512r1}
+var allCurvePreferences = []keys.TLSCurveID{keys.Secp160k1, keys.Secp160r1, keys.Secp160r2, keys.Secp224r1, keys.Secp256r1, keys.Secp384r1, keys.Secp521r1, keys.BrainpoolP256r1, keys.BrainpoolP384r1, keys.BrainpoolP512r1}
 
 func (c *Config) SetCurvePreferences(pref string) {
 	if pref == "all" {

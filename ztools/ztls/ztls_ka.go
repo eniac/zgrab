@@ -51,7 +51,7 @@ func (ka *rsaKeyAgreement) RSAParams() *keys.RSAPublicKey {
 
 func (ka *ecdheKeyAgreement) ECDHParams() *keys.ECDHParams {
 	out := new(keys.ECDHParams)
-	out.TLSCurveID = keys.TLSCurveID(ka.curveID)
+	out.TLSCurveID = ka.curveID
 	out.ServerPublic = &keys.ECPoint{}
 	if ka.serverPublicKey != nil {
 		if ka.serverPublicKey.X != nil {
@@ -68,7 +68,7 @@ func (ka *ecdheKeyAgreement) ECDHParams() *keys.ECDHParams {
 
 func (ka *ecdheKeyAgreement) ClientECDHParams() *keys.ECDHParams {
 	out := new(keys.ECDHParams)
-	out.TLSCurveID = keys.TLSCurveID(ka.curveID)
+	out.TLSCurveID = ka.curveID
 	out.ClientPublic = &keys.ECPoint{}
 	if ka.clientPublicKey != nil {
 		if ka.clientPublicKey.X != nil {

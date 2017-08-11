@@ -494,30 +494,28 @@ type ecdheKeyAgreement struct {
 	clientPublicKey *ecdh.ECDHPublicKey
 	curve           ecdh.Curve
 	verifyError     error
-	curveID         uint16
+	curveID         keys.TLSCurveID
 }
 
 func (ka *ecdheKeyAgreement) generateServerKeyExchange(config *Config, cert *Certificate, clientHello *clientHelloMsg, hello *serverHelloMsg) (*serverKeyExchangeMsg, error) {
-	var curveid keys.TLSCurveID
 	preferredCurves := config.curvePreferences()
 
 NextCandidate:
 	for _, candidate := range preferredCurves {
 		for _, c := range clientHello.supportedCurves {
 			if candidate == c {
-				curveid = c
+				ka.curveID = c
 				break NextCandidate
 			}
 		}
 	}
 
-	if curveid == 0 {
+	if ka.curveID == 0 {
 		return nil, errors.New("tls: no supported elliptic curves offered")
 	}
-	ka.curveID = uint16(curveid)
 
 	var ok bool
-	if ka.curve, ok = curveForCurveID(curveid); !ok {
+	if ka.curve, ok = curveForCurveID(ka.curveID); !ok {
 		return nil, errors.New("tls: preferredCurves includes unsupported curve")
 	}
 
@@ -532,8 +530,8 @@ NextCandidate:
 	// http://tools.ietf.org/html/rfc4492#section-5.4
 	serverECDHParams := make([]byte, 1+2+1+len(ecdhePublic))
 	serverECDHParams[0] = 3 // named curve
-	serverECDHParams[1] = byte(curveid >> 8)
-	serverECDHParams[2] = byte(curveid)
+	serverECDHParams[1] = byte(ka.curveID >> 8)
+	serverECDHParams[2] = byte(ka.curveID)
 	serverECDHParams[3] = byte(len(ecdhePublic))
 	copy(serverECDHParams[4:], ecdhePublic)
 
@@ -563,11 +561,10 @@ func (ka *ecdheKeyAgreement) processServerKeyExchange(config *Config, clientHell
 	if skx.key[0] != 3 { // named curve
 		return errors.New("tls: server selected unsupported curve")
 	}
-	curveid := keys.TLSCurveID(skx.key[1])<<8 | keys.TLSCurveID(skx.key[2])
-	ka.curveID = uint16(curveid)
+	ka.curveID = keys.TLSCurveID(uint16(skx.key[1])<<8 | uint16(skx.key[2]))
 
 	var ok bool
-	if ka.curve, ok = curveForCurveID(curveid); !ok {
+	if ka.curve, ok = curveForCurveID(ka.curveID); !ok {
 		return errors.New("tls: server selected unsupported curve")
 	}
 
@@ -601,7 +598,7 @@ func (ka *ecdheKeyAgreement) generateClientKeyExchange(config *Config, clientHel
 
 	found := false
 	for _, curveID := range clientHello.supportedCurves {
-		if ka.curveID == uint16(curveID) {
+		if ka.curveID == curveID {
 			found = true
 		}
 	}
@@ -621,25 +618,38 @@ func (ka *ecdheKeyAgreement) generateClientKeyExchange(config *Config, clientHel
 		case "256_ECP_INVALID_S5": // NIST-P256 generator of subgroup of order 5 on curve w/ B-1
 			mx, _ = new(big.Int).SetString("86765160823711241075790919525606906052464424178558764461827806608937748883041", 10)
 			my, _ = new(big.Int).SetString("62096069626295534024197897036720226401219594482857127378802405572766226928611", 10)
+			ka.curveID = keys.Secp256r1
 			staticKex = true
 		case "256_ECP_TWIST_S5": // NIST-P256 generator of subgroup of order 5 on twist
 			// y^2 = x^3 + 64540953657701435357043644561909631465859193840763101878720769919119982834454*x + 21533133778103722695369883733312533132949737997864576898233410179589774724054
+			//mx, _ = new(big.Int).SetString("75610932410248387784210576211184530780201393864652054865721797292564276389325", 10)
+			//my, _ = new(big.Int).SetString("30046858919395540206086570437823256496220553255320964836453418613861962163895", 10)
+			mx, _ = new(big.Int).SetString("65000580346672419638629453770715906531917592959616632823634978442784087859381", 10)
+			my, _ = new(big.Int).SetString("101434952638835666830672287755036482040135206184891409299575619037815517987306", 10)
+			ka.curveID = keys.Secp256r1
+			staticKex = true
+		case "256_ECP_TWIST_S5_SHARED":
 			mx, _ = new(big.Int).SetString("75610932410248387784210576211184530780201393864652054865721797292564276389325", 10)
-			my, _ = new(big.Int).SetString("30046858919395540206086570437823256496220553255320964836453418613861962163895", 10)
+			my, _ = new(big.Int).SetString("17016988387429062713000967549338170748423683329322284176365945285736516510233", 10)
+			ka.curveID = keys.Secp256r1
 			staticKex = true
 		case "224_ECP_INVALID_S13": // NIST-P224 generator of subgroup of order 13 on curve w/ B-1
 			mx, _ = new(big.Int).SetString("1234919426772886915432358412587735557527373236174597031415308881584", 10)
 			my, _ = new(big.Int).SetString("218592750580712164156183367176268299828628545379017213517316023994", 10)
+			ka.curveID = keys.Secp224r1
 			staticKex = true
 		case "224_ECP_TWIST_S11": // NIST-P224 generator of subgroup of order 11 on twist
 			mx, _ = new(big.Int).SetString("21219928721835262216070635629075256199931199995500865785214182108232", 10)
 			my, _ = new(big.Int).SetString("2486431965114139990348241493232938533843075669604960787364227498903", 10)
+			ka.curveID = keys.Secp224r1
 			staticKex = true
+		case "":
 		default:
 			panic("unrecognized tls-kex-config option")
 		}
 	}
 	if staticKex {
+		ka.curve, _ = curveForCurveID(ka.curveID)
 		ka.privateKey = nil
 		ka.clientPublicKey = &ecdh.ECDHPublicKey{
 			X: mx,
