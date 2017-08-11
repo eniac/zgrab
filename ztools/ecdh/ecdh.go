@@ -17,7 +17,7 @@ type ECDHPrivateKey struct {
 
 type Curve interface {
 	GenerateKey(io.Reader) (*ECDHPrivateKey, *ECDHPublicKey, error)
-	Marshal(*ECDHPublicKey) []byte
+	Marshal(*ECDHPublicKey, bool) []byte
 	Unmarshal([]byte) (*ECDHPublicKey, bool)
 	GenerateSharedSecret(*ECDHPrivateKey, *ECDHPublicKey) ([]byte, error)
 }

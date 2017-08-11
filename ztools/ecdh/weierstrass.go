@@ -43,8 +43,19 @@ func (e *weierstrass) GenerateKey(rand io.Reader) (*ECDHPrivateKey, *ECDHPublicK
 	return priv, pub, nil
 }
 
-func (e *weierstrass) Marshal(pub *ECDHPublicKey) []byte {
-	return elliptic.Marshal(e.curve, pub.X, pub.Y)
+func (e *weierstrass) Marshal(pub *ECDHPublicKey, compress bool) []byte {
+    if compress {
+        byteLen := (e.curve.Params().BitSize + 7) >> 3
+
+        ret := make([]byte, 1+byteLen)
+        ret[0] = byte(2 + pub.Y.Bit(e.curve.Params().BitSize)) // compressed point
+
+        xBytes := pub.X.Bytes()
+        copy(ret[1+byteLen-len(xBytes):], xBytes)
+        return ret
+    } else {
+        return elliptic.Marshal(e.curve, pub.X, pub.Y)
+    }
 }
 
 func (e *weierstrass) Unmarshal(data []byte) (*ECDHPublicKey, bool) {

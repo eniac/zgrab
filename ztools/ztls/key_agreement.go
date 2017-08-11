@@ -526,7 +526,7 @@ NextCandidate:
 	if err != nil {
 		return nil, err
 	}
-	ecdhePublic := ka.curve.Marshal(pub)
+	ecdhePublic := ka.curve.Marshal(pub, false)
 
 	// http://tools.ietf.org/html/rfc4492#section-5.4
 	serverECDHParams := make([]byte, 1+2+1+len(ecdhePublic))
@@ -655,7 +655,7 @@ func (ka *ecdheKeyAgreement) generateClientKeyExchange(config *Config, clientHel
 		panic("unrecognized tls-kex-config")
 	}
 
-	serialized := ka.curve.Marshal(ka.clientPublicKey)
+	serialized := ka.curve.Marshal(ka.clientPublicKey, true)
 
 	ckx := new(clientKeyExchangeMsg)
 	ckx.ciphertext = make([]byte, 1+len(serialized))
