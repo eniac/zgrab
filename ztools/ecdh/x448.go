@@ -35,7 +35,9 @@ func (e *x448) GenerateKey(rand io.Reader) (*ECDHPrivateKey, *ECDHPublicKey, err
 }
 
 func (e *x448) Marshal(pub *ECDHPublicKey, compress bool) []byte {
-	return pub.X.Bytes()
+	ret := new([56]byte)
+	copy(ret[:], pub.X.Bytes())
+	return ret[:]
 }
 
 func (e *x448) Unmarshal(data []byte) (*ECDHPublicKey, bool) {

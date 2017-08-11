@@ -615,6 +615,18 @@ func (ka *ecdheKeyAgreement) generateClientKeyExchange(config *Config, clientHel
 		switch option {
 		case "COMPRESS":
 			compress = true
+		case "X25519_INVALID_S2":
+			mx, _ = new(big.Int).SetString("0", 10)
+			ka.curveID = keys.X25519
+			staticKex = true
+		case "X25519_INVALID_S4":
+			mx, _ = new(big.Int).SetString("1", 10)
+			ka.curveID = keys.X25519
+			staticKex = true
+		case "X25519_INVALID_S8":
+			mx, _ = new(big.Int).SetString("39382357235489614581723060781553021112529911719440698176882885853963445705823", 10)
+			ka.curveID = keys.X25519
+			staticKex = true
 		case "256_ECP_INVALID_S5": // NIST-P256 generator of subgroup of order 5 on curve w/ B-1
 			mx, _ = new(big.Int).SetString("86765160823711241075790919525606906052464424178558764461827806608937748883041", 10)
 			my, _ = new(big.Int).SetString("62096069626295534024197897036720226401219594482857127378802405572766226928611", 10)
