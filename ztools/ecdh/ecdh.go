@@ -5,7 +5,10 @@ package ecdh
 import (
 	"io"
 	"math/big"
+	"sync"
 )
+
+var once sync.Once
 
 type ECDHPublicKey struct {
 	X, Y *big.Int

@@ -273,6 +273,12 @@ func pickTLS12HashForSignature(sigType uint8, clientList, serverList []signature
 
 func curveForCurveID(id keys.TLSCurveID) (ecdh.Curve, bool) {
 	switch id {
+	case keys.Sect163k1:
+		return ecdh.T163k1(), true
+	case keys.Sect163r1:
+		return ecdh.T163r1(), true
+	case keys.Sect163r2:
+		return ecdh.T163r2(), true
 	case keys.Secp160r1:
 		return ecdh.P160r1(), true
 	case keys.Secp160k1:

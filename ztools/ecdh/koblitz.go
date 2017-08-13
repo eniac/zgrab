@@ -78,12 +78,10 @@ func (e *koblitz) GenerateSharedSecret(privKey *ECDHPrivateKey, pubKey *ECDHPubl
 }
 
 func P160k1() Curve {
-	once.Do(initAll)
 	return NewKoblitz(bitelliptic.S160())
 }
 
 func P192k1() Curve {
-	once.Do(initAll)
 	return NewKoblitz(bitelliptic.S192())
 }
 

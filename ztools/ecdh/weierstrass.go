@@ -7,7 +7,6 @@ import (
 	"github.com/keybase/go-crypto/brainpool"
 	"io"
 	"math/big"
-	"sync"
 )
 
 type weierstrass struct {
@@ -80,15 +79,8 @@ func (e *weierstrass) GenerateSharedSecret(privKey *ECDHPrivateKey, pubKey *ECDH
 }
 
 var (
-	once                                                   sync.Once
 	p160k1, p160r1, p160r2, p192k1, p192r1, p224k1, p256k1 *elliptic.CurveParams
 )
-
-func initAll() {
-	initP160r1()
-	initP160r2()
-	initP192r1()
-}
 
 func initP160r1() {
 	p160r1 = new(elliptic.CurveParams)
@@ -121,17 +113,17 @@ func initP192r1() {
 }
 
 func P160r1() Curve {
-	once.Do(initAll)
+	initP160r1()
 	return NewWeierstrass(p160r1)
 }
 
 func P160r2() Curve {
-	once.Do(initAll)
+	initP160r2()
 	return NewWeierstrass(p160r2)
 }
 
 func P192r1() Curve {
-	once.Do(initAll)
+	initP192r1()
 	return NewWeierstrass(p192r1)
 }
 
