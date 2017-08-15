@@ -35,6 +35,8 @@ scans = [
                 },
             zgrab_common_options=' --ike-version 1 --port 500',
             zgrab_scans=[
+                ('EC2N_155', ' --ike-config EC2N_155'),
+                ('EC2N_185', ' --ike-config EC2N_155'),
 #                ('BASELINE', ' --ike-config BASELINE'),
 #
 #                ('2048S256', ' --ike-config 2048S256'),
@@ -55,14 +57,14 @@ scans = [
 #                ('2048S224_M1', ' --ike-config 2048S224_M1'),
 #                ('2048S224_S3', ' --ike-config 2048S224_S3'),
 
-                ('ECDH_BASELINE', ' --ike-config ECDH_BASELINE'),
-                ('256_ECP_DOUBLE', ' --ike-config 256_ECP'),
-                ('256_ECP_TWIST_S5', ' --ike-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --ike-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --ike-config 224_ECP'),
-                ('256_BRAINPOOL', ' --ike-config 256_BRAINPOOL'),
-                ('384_ECP', ' --ike-config 384_ECP'),
-                ('521_ECP', ' --ike-config 521_ECP'),
+#                ('ECDH_BASELINE', ' --ike-config ECDH_BASELINE'),
+#                ('256_ECP_DOUBLE', ' --ike-config 256_ECP'),
+#                ('256_ECP_TWIST_S5', ' --ike-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --ike-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --ike-config 224_ECP'),
+#                ('256_BRAINPOOL', ' --ike-config 256_BRAINPOOL'),
+#                ('384_ECP', ' --ike-config 384_ECP'),
+#                ('521_ECP', ' --ike-config 521_ECP'),
 #                ('CURVE25519', ' --ike-config CURVE25519'), # not yet standardized: https://tools.ietf.org/html/draft-ietf-ipsecme-safecurves-05#section-2
                 ]
             ),
@@ -74,6 +76,8 @@ scans = [
                 },
             zgrab_common_options=' --ike-version 2 --port 500',
             zgrab_scans=[
+                ('EC2N_155', ' --ike-config EC2N_155'),
+                ('EC2N_185', ' --ike-config EC2N_155'),
 #                ('BASELINE', ' --ike-config BASELINE'),
 #
 #                ('2048S256', ' --ike-config 2048S256'),
@@ -94,14 +98,14 @@ scans = [
 #                ('2048S224_M1', ' --ike-config 2048S224_M1'),
 #                ('2048S224_S3', ' --ike-config 2048S224_S3'),
 
-                ('ECDH_BASELINE', ' --ike-config ECDH_BASELINE'),
-                ('256_ECP_DOUBLE', ' --ike-config 256_ECP'),
-                ('256_ECP_TWIST_S5', ' --ike-config 256_ECP_TWIST_S5'),
-                ('256_ECP_INVALID_S5', ' --ike-config 256_ECP_INVALID_S5'),
-                ('224_ECP', ' --ike-config 224_ECP'),
-                ('256_BRAINPOOL', ' --ike-config 256_BRAINPOOL'),
-                ('384_ECP', ' --ike-config 384_ECP'),
-                ('521_ECP', ' --ike-config 521_ECP'),
+#                ('ECDH_BASELINE', ' --ike-config ECDH_BASELINE'),
+#                ('256_ECP_DOUBLE', ' --ike-config 256_ECP'),
+#                ('256_ECP_TWIST_S5', ' --ike-config 256_ECP_TWIST_S5'),
+#                ('256_ECP_INVALID_S5', ' --ike-config 256_ECP_INVALID_S5'),
+#                ('224_ECP', ' --ike-config 224_ECP'),
+#                ('256_BRAINPOOL', ' --ike-config 256_BRAINPOOL'),
+#                ('384_ECP', ' --ike-config 384_ECP'),
+#                ('521_ECP', ' --ike-config 521_ECP'),
 #                ('CURVE25519', ' --ike-config CURVE25519'), # not yet standardized: https://tools.ietf.org/html/draft-ietf-ipsecme-safecurves-05#section-2
                 ]
             ),

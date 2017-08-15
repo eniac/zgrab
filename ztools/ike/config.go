@@ -775,6 +775,12 @@ func (c *Config) MakeConfig(configString string, ikeVersion string) (err error) 
     case "256_BRAINPOOL":
         c.DhGroup = DH_256_BRAINPOOL_V1
         c.MakeSINGLE_GROUP()
+    case "EC2N_155":
+        c.DhGroup = DH_EC2N_GP_155_V1
+        c.MakeSINGLE_GROUP()
+    case "EC2N_185":
+        c.DhGroup = DH_EC2N_GP_185_V1
+        c.MakeSINGLE_GROUP()
     // Not yet standardized as of Nov. 2016: https://tools.ietf.org/html/draft-ietf-ipsecme-safecurves-05#section-2
     //case "CURVE25519":
     //    c.DhGroup = DH_CURVE25519_V2
