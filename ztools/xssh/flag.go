@@ -1,6 +1,7 @@
 package xssh
 
 import (
+	"encoding/hex"
 	"errors"
 	"flag"
 	"fmt"
@@ -19,6 +20,8 @@ type XSSHConfig struct {
 	GexMinBits        uint
 	GexMaxBits        uint
 	GexPreferredBits  uint
+	KexValues         KexValueList
+	KexDHMinusOne     bool
 }
 
 type HostKeyAlgorithmsList struct {
@@ -127,6 +130,34 @@ func (cList *CipherList) Get() []string {
 	}
 }
 
+type KexValueList struct {
+	KexValues []string
+}
+
+func (kList *KexValueList) String() string {
+	return strings.Join(kList.KexValues, ",")
+}
+
+func (kList *KexValueList) Set(value string) error {
+	for _, kexValue := range strings.Split(value, ",") {
+		if _, err := hex.DecodeString(kexValue); err != nil {
+			return err
+		}
+
+		kList.KexValues = append(kList.KexValues, kexValue)
+	}
+
+	return nil
+}
+
+func (kList *KexValueList) Get() []string {
+	if len(kList.KexValues) == 0 {
+		return []string{}
+	} else {
+		return kList.KexValues
+	}
+}
+
 func init() {
 	flag.StringVar(&pkgConfig.ClientID, "xssh-client-id", packageVersion, "Specify the client ID string to use")
 
@@ -154,4 +185,7 @@ func init() {
 	flag.UintVar(&pkgConfig.GexMinBits, "xssh-gex-min-bits", 1024, "The minimum number of bits for the DH GEX prime.")
 	flag.UintVar(&pkgConfig.GexMaxBits, "xssh-gex-max-bits", 8192, "The maximum number of bits for the DH GEX prime.")
 	flag.UintVar(&pkgConfig.GexPreferredBits, "xssh-gex-preferred-bits", 2048, "The preferred number of bits for the DH GEX prime.")
+
+	flag.BoolVar(&pkgConfig.KexDHMinusOne, "xssh-kex-dh-pminus1", false, "For DH key exchanges with prime p, send p-1 as the client public key.")
+	flag.Var(&pkgConfig.KexValues, "xssh-kex-values", "A comma-separated list of hex-encoded public key exchange values for the client to use. For DH, specify [g^x]; for ECDH, specify [x,y]; for Curve25519, specify [x].")
 }

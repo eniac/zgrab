@@ -220,13 +220,18 @@ func (group *dhGroup) Client(c packetConn, randSource io.Reader, magics *handsha
 		}
 	}
 
-	if pkgConfig.Verbose {
-		group.JsonLog.Parameters.ClientPrivate = x
-	}
-
 	X := new(big.Int).Exp(group.g, x, group.p)
 
+	if len(pkgConfig.KexValues.Get()) == 1 {
+		X, _ = new(big.Int).SetString(pkgConfig.KexValues.Get()[0], 16)
+		x.SetUint64(0)
+	} else if pkgConfig.KexDHMinusOne {
+		X = group.pMinus1
+		x.SetUint64(0)
+	}
+
 	if pkgConfig.Verbose {
+		group.JsonLog.Parameters.ClientPrivate = x
 		group.JsonLog.Parameters.ClientPublic = X
 	}
 
@@ -256,6 +261,11 @@ func (group *dhGroup) Client(c packetConn, randSource io.Reader, magics *handsha
 	kInt, err := group.diffieHellman(kexDHReply.Y, x)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(pkgConfig.KexValues.Get()) == 1 || pkgConfig.KexDHMinusOne {
+		// If this is an order-N element, then we have a 1 in N chance of guessing the premaster secret correctly.
+		kInt = X
 	}
 
 	h := hashFunc.New()
@@ -394,6 +404,12 @@ func (kex *ecdh) Client(c packetConn, rand io.Reader, magics *handshakeMagics) (
 		return nil, err
 	}
 
+	if len(pkgConfig.KexValues.Get()) == 2 {
+		ephKey.PublicKey.X, _ = new(big.Int).SetString(pkgConfig.KexValues.Get()[0], 16)
+		ephKey.PublicKey.Y, _ = new(big.Int).SetString(pkgConfig.KexValues.Get()[1], 16)
+		ephKey.D.SetUint64(0)
+	}
+
 	if pkgConfig.Verbose {
 		kex.JsonLog.Parameters.ClientPublic.X = ephKey.PublicKey.X
 		kex.JsonLog.Parameters.ClientPublic.Y = ephKey.PublicKey.Y
@@ -433,6 +449,11 @@ func (kex *ecdh) Client(c packetConn, rand io.Reader, magics *handshakeMagics) (
 
 	// generate shared secret
 	secret, _ := kex.curve.ScalarMult(x, y, ephKey.D.Bytes())
+
+	if len(pkgConfig.KexValues.Get()) == 2 {
+		// If this is an order-N element, then we have a 1 in N chance of guessing the premaster secret correctly.
+		secret = ephKey.PublicKey.X
+	}
 
 	h := ecHash(kex.curve).New()
 	magics.write(h)
@@ -645,6 +666,18 @@ func (kex *curve25519sha256) Client(c packetConn, rand io.Reader, magics *handsh
 		return nil, err
 	}
 
+	if len(pkgConfig.KexValues.Get()) == 1 {
+		decoded, err := hex.DecodeString(pkgConfig.KexValues.Get()[0])
+		if err != nil {
+			return nil, err
+		}
+		if len(decoded) != 32 {
+			return nil, errors.New("ssh: specified curve25519 public value must have length 32 bytes")
+		}
+		copy(kp.pub[:], decoded[:])
+		copy(kp.priv[:], curve25519Zeros[:])
+	}
+
 	if pkgConfig.Verbose {
 		kex.JsonLog.Parameters.ClientPublic = kp.pub[:]
 		kex.JsonLog.Parameters.ClientPrivate = kp.priv[:]
@@ -678,6 +711,10 @@ func (kex *curve25519sha256) Client(c packetConn, rand io.Reader, magics *handsh
 	curve25519.ScalarMult(&secret, &kp.priv, &servPub)
 	if subtle.ConstantTimeCompare(secret[:], curve25519Zeros[:]) == 1 {
 		return nil, errors.New("ssh: peer's curve25519 public value has wrong order")
+	}
+
+	if len(pkgConfig.KexValues.Get()) == 1 {
+		copy(secret[:], kp.pub[:])
 	}
 
 	h := crypto.SHA256.New()
