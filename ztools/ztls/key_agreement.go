@@ -284,7 +284,7 @@ func curveForCurveID(id keys.TLSCurveID) (ecdh.Curve, bool) {
 	case keys.Secp160k1:
 		return ecdh.P160k1(), true
 	case keys.Secp160r2:
-		return ecdh.P160r1(), true
+		return ecdh.P160r2(), true
 	case keys.Secp192r1:
 		return ecdh.P192r1(), true
 	case keys.Secp192k1:
@@ -631,6 +631,10 @@ func (ka *ecdheKeyAgreement) generateClientKeyExchange(config *Config, clientHel
 			staticKex = true
 		case "X25519_INVALID_S8":
 			mx, _ = new(big.Int).SetString("39382357235489614581723060781553021112529911719440698176882885853963445705823", 10)
+			ka.curveID = keys.X25519
+			staticKex = true
+		case "X25519_TWIST_S4":
+			mx, _ = new(big.Int).SetString("40037414119260815170158213804056845813451397265373646178320500467079007173856", 10)
 			ka.curveID = keys.X25519
 			staticKex = true
 		case "256_ECP_INVALID_S5": // NIST-P256 generator of subgroup of order 5 on curve w/ B-1
