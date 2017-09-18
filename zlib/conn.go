@@ -57,6 +57,9 @@ type Conn struct {
 	// Max TLS version
 	maxTlsVersion uint16
 
+	// TLS Key Exchange Config
+	TLSKexConfig string
+
 	// Cache the deadlines so we can reapply after TLS handshake
 	readDeadline  time.Time
 	writeDeadline time.Time
@@ -291,6 +294,7 @@ func (c *Conn) TLSHandshake() error {
 	tlsConfig.InsecureSkipVerify = true
 	tlsConfig.MinVersion = tls.VersionSSL30
 	tlsConfig.MaxVersion = c.maxTlsVersion
+	tlsConfig.KexConfig = c.TLSKexConfig
 	tlsConfig.RootCAs = c.caPool
 	tlsConfig.HeartbeatEnabled = true
 	tlsConfig.ClientDSAEnabled = true

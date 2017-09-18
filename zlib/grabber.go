@@ -421,6 +421,9 @@ func makeGrabber(config *Config) func(*Conn) error {
 			c.SetTLSVerbose()
 		}
 
+		if config.TLSKexConfig != "" {
+			c.TLSKexConfig = config.TLSKexConfig
+		}
 		if config.TLS {
 			if err := c.TLSHandshake(); err != nil {
 				c.erroredComponent = "tls"

@@ -73,6 +73,7 @@ func init() {
 	flag.UintVar(&timeout, "timeout", 10, "Set connection timeout in seconds")
 	flag.BoolVar(&config.TLS, "tls", false, "Grab over TLS")
 	flag.StringVar(&tlsVersion, "tls-version", "", "Max TLS version to use (implies --tls)")
+	flag.StringVar(&config.TLSKexConfig, "tls-kex-config", "", "TLS key exchange config")
 	flag.UintVar(&config.Senders, "senders", 1000, "Number of send coroutines to use")
 	flag.UintVar(&config.ConnectionsPerHost, "connections-per-host", 1, "Number of times to connect to each host (results in more output)")
 	flag.BoolVar(&config.Banners, "banners", false, "Read banner upon connection creation")
