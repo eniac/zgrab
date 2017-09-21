@@ -21,6 +21,7 @@ import (
 
 	"github.com/zmap/zcrypto/tls"
 	"github.com/zmap/zgrab/ztools/ftp"
+	"github.com/zmap/zgrab/ztools/ike"
 	"github.com/zmap/zgrab/ztools/scada/bacnet"
 	"github.com/zmap/zgrab/ztools/scada/dnp3"
 	"github.com/zmap/zgrab/ztools/scada/fox"
@@ -61,6 +62,7 @@ type GrabData struct {
 	Modbus       *ModbusEvent         `json:"modbus,omitempty"`
 	SMB          *smb.SMBLog          `json:"smb,omitempty"`
 	XSSH         *xssh.HandshakeLog   `json:"xssh,omitempty"`
+	IKE          *ike.HandshakeLog    `json:"ike,omitempty"`
 	FTP          *ftp.FTPLog          `json:"ftp,omitempty"`
 	BACNet       *bacnet.Log          `json:"bacnet,omitempty"`
 	Fox          *fox.FoxLog          `json:"fox,omitempty"`

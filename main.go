@@ -132,6 +132,9 @@ func init() {
 	// Flags for XSSH scanner
 	flag.BoolVar(&config.XSSH.XSSH, "xssh", false, "Use the x/crypto SSH scanner")
 
+	// Flags for IKE scanner
+	flag.BoolVar(&config.IKE.IKE, "ike", false, "Use the IKE scanner")
+
 	// Flags for SMB scanner
 	flag.BoolVar(&config.SMB.SMB, "smb", false, "Scan for SMB")
 	flag.IntVar(&config.SMB.Protocol, "smb-protocol", 1, "Specify which SMB protocol to scan for")

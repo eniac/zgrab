@@ -31,6 +31,7 @@ import (
 	"github.com/zmap/zcrypto/tls"
 	"github.com/zmap/zgrab/ztools/ftp"
 	"github.com/zmap/zgrab/ztools/http"
+	"github.com/zmap/zgrab/ztools/ike"
 	"github.com/zmap/zgrab/ztools/processing"
 	"github.com/zmap/zgrab/ztools/scada/dnp3"
 	"github.com/zmap/zgrab/ztools/scada/fox"
@@ -625,6 +626,21 @@ func makeXSSHGrabber(gblConfig *Config, grabData GrabData) func(string) error {
 	}
 }
 
+func makeIKEGrabber(gblConfig *Config, grabData GrabData) func(string) error {
+	return func(netAddr string) error {
+
+		ikeConfig := ike.MakeIKEConfig()
+		ikeConfig.Timeout = gblConfig.Timeout
+		ikeConfig.ConnLog = grabData.IKE
+		_, err := ike.Dial("udp", netAddr, ikeConfig)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
 func GrabBanner(config *Config, target *GrabTarget) *Grab {
 	if config.XSSH.XSSH {
 		t := time.Now()
@@ -636,6 +652,23 @@ func GrabBanner(config *Config, target *GrabTarget) *Grab {
 		rhost := net.JoinHostPort(target.Addr.String(), port)
 
 		err := xsshGrabber(rhost)
+
+		return &Grab{
+			IP:    target.Addr,
+			Time:  t,
+			Data:  grabData,
+			Error: err,
+		}
+	} else if config.IKE.IKE {
+		t := time.Now()
+
+		grabData := GrabData{IKE: new(ike.HandshakeLog)}
+		ikeGrabber := makeIKEGrabber(config, grabData)
+
+		port := strconv.FormatUint(uint64(config.Port), 10)
+		rhost := net.JoinHostPort(target.Addr.String(), port)
+
+		err := ikeGrabber(rhost)
 
 		return &Grab{
 			IP:    target.Addr,

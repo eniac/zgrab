@@ -35,6 +35,10 @@ type XSSHScanConfig struct {
 	XSSH bool
 }
 
+type IKEScanConfig struct {
+	IKE bool
+}
+
 type SMBScanConfig struct {
 	SMB      bool
 	Protocol int
@@ -123,6 +127,9 @@ type Config struct {
 
 	// x/crypto SSH
 	XSSH XSSHScanConfig
+
+	// IKE
+	IKE IKEScanConfig
 
 	// SMB
 	SMB SMBScanConfig
