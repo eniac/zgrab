@@ -2,8 +2,10 @@ package ike
 
 import (
 	"errors"
+	"github.com/zmap/zgrab/ztools/zlog"
+	"io/ioutil"
 	"net"
-	//    "io/ioutil"
+	"os"
 )
 
 type Conn struct {
@@ -17,11 +19,16 @@ type Conn struct {
 
 func (c *Conn) writeMessage(msg *ikeMessage) error {
 	x := msg.marshal()
-	//  Use this to print out zmap probe packet
-	//    _ = ioutil.WriteFile("fortigate.v1.pkt", x, 0644)
-	//  panic("WROTE FILE")
+	if len(pkgConfig.ProbeFile) > 0 {
+		if err := ioutil.WriteFile(pkgConfig.ProbeFile, x, 0644); err != nil {
+			zlog.Fatalf("Error writing to probe file \"%s\": %s", pkgConfig.ProbeFile, err.Error())
+		} else {
+			zlog.Info("Wrote probe file and exiting...")
+			os.Exit(0)
+		}
+	}
 	if len(x) > MAX_UDP_PAYLOAD_LEN {
-		panic("message exceeds max udp payload length (disable this warning if you don't care)")
+		zlog.Fatalf("Message exceeds max udp payload length (disable this warning if you don't care)")
 	}
 	n, err := c.Write(x)
 	if err != nil {

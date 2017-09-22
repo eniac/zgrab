@@ -17,6 +17,7 @@ type IKEConfig struct {
 	Proposals ProposalList
 	KexValues KexValueList
 	BuiltIn   string
+	ProbeFile string
 }
 
 type ProposalList struct {
@@ -96,4 +97,5 @@ func init() {
 	flag.Var(&pkgConfig.Proposals, "ike-proposals", "A json-encoded list of proposals for the initiator security association payload. See the build-proposal.py tool.")
 	flag.Var(&pkgConfig.KexValues, "ike-kex-values", "A comma-separated list of hex-encoded public key exchange values for the initiator key exchange payload.")
 	flag.StringVar(&pkgConfig.BuiltIn, "ike-builtin", "", "Use a built-in IKE config, overwriting other command-line IKE options.")
+	flag.StringVar(&pkgConfig.ProbeFile, "ike-probe-file", "", "Write the initial initiator packet to file and exit. (This is useful for creating zmap probes.)")
 }
