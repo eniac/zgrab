@@ -19,14 +19,14 @@ go get -d github.com/eniac/zgrab
 This will install zgrab under `$GOPATH/src/github.com/eniac/zgrab` without trying to build yet (we still need to resolve some dependencies).  Next, run:
 
 ```
-go get -u github.com/golang/dep
-go install github.com/golang/dep
+go get -u github.com/golang/dep/cmd/dep
+go install github.com/golang/dep/cmd/dep
 ```
 
 This will install dep, a go dependency manager, into `$GOPATH/bin/dep`. Dep requires at least go version 1.8. Then:
 
 ```
-$ cd $GOPATH/src/github.com/zmap/zgrab
+$ cd $GOPATH/src/github.com/eniac/zgrab
 $ $GOPATH/bin/dep ensure
 $ go build
 ```
