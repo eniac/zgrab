@@ -6,20 +6,28 @@ zgrab
 
 A Banner Grabber, in Go
 
-## Building
+## Building (updated for eniac fork)
 
-You will need to have a valid `$GOPATH` set up, for more information about `$GOPATH`, see https://golang.org/doc/code.html.
+You will need to have a valid `$GOPATH` set up. For more information about `$GOPATH`, see https://golang.org/doc/code.html.
 
 Once you have a working `$GOPATH`, run:
 
 ```
-go get github.com/zmap/zgrab
+go get -d github.com/eniac/zgrab
 ```
 
-This will install zgrab under `$GOPATH/src/github.com/zmap/zgrab`
+This will install zgrab under `$GOPATH/src/github.com/eniac/zgrab` without trying to build yet (we still need to resolve some dependencies).  Next, run:
+
+```
+go get -u github.com/golang/dep
+go install github.com/golang/dep
+```
+
+This will install dep, a go dependency manager, into `$GOPATH/bin/dep`. Dep requires at least go version 1.8. Then:
 
 ```
 $ cd $GOPATH/src/github.com/zmap/zgrab
+$ $GOPATH/bin/dep ensure
 $ go build
 ```
 
@@ -79,6 +87,24 @@ Usage of ./zgrab:
     	Send a CONNECT <domain> first
   -http-user-agent string
     	Set a custom HTTP user agent (default "Mozilla/5.0 zgrab/0.x")
+  -ike
+    	Use the IKE scanner
+  -ike-builtin string
+    	Use a built-in IKE config, overwriting other command-line IKE options.
+  -ike-dh-group int
+    	The Diffie-Hellman group to be sent in the key exchange payload. (default 14)
+  -ike-kex-values value
+    	A comma-separated list of hex-encoded public key exchange values for the initiator key exchange payload.
+  -ike-mode-v1 string
+    	Specify "main" or "aggressive" mode for IKEv1. (default "main")
+  -ike-probe-file string
+    	Write the initial initiator packet to file and exit. (This is useful for creating zmap probes.)
+  -ike-proposals value
+    	A json-encoded list of proposals for the initiator security association payload. See the build-proposal.py tool.
+  -ike-verbose
+    	Output additional information about the IKE exchange.
+  -ike-version int
+    	The IKE version to use. (default 1)
   -imap
     	Conform to IMAP rules when sending STARTTLS
   -input-file string
@@ -137,6 +163,8 @@ Usage of ./zgrab:
     	Offer RFC 7627 Extended Master Secret extension
   -tls-extended-random
     	send extended random extension
+  -tls-kex-config string
+    	TLS key exchange config
   -tls-session-ticket
     	Send support for TLS Session Tickets and output ticket if presented
   -tls-verbose
@@ -159,10 +187,14 @@ Usage of ./zgrab:
     	A comma-separated list of which host key algorithms to offer (default "ssh-rsa-cert-v01@openssh.com,ssh-dss-cert-v01@openssh.com,ecdsa-sha2-nistp256-cert-v01@openssh.com,ecdsa-sha2-nistp384-cert-v01@openssh.com,ecdsa-sha2-nistp521-cert-v01@openssh.com,ssh-ed25519-cert-v01@openssh.com,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,ssh-rsa,ssh-dss,ssh-ed25519")
   -xssh-kex-algorithms value
     	A comma-separated list of which DH key exchange algorithms to offer (default "curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group14-sha1,diffie-hellman-group1-sha1")
+  -xssh-kex-dh-pminus1
+    	For DH key exchanges with prime p, send p-1 as the client public key.
+  -xssh-kex-values value
+    	A comma-separated list of hex-encoded public key exchange values for the client to use. For DH, specify [g^x]; for ECDH, specify [x,y]; for Curve25519, specify [x].
   -xssh-userauth
     	Use the 'none' authentication request to see what userauth methods are allowed.
   -xssh-verbose
-    	Output additional information.
+    	Output additional information, including X/SSH client properties from the SSH handshake.
 ```
 
 ## Example

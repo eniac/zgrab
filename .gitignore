@@ -37,3 +37,7 @@ zcertificate/zcertificate
 
 # Vim backup files
 *~
+
+# Dep files
+Gopkg.lock
+vendor

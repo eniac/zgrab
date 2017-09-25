@@ -513,7 +513,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate files and directories to run a scan.")
-    parser.add_argument("-e", "--executable", type=str, default=os.path.expandvars("$GOPATH") + "/src/github.com/zmap/zgrab/zgrab")
+    parser.add_argument("-e", "--executable", type=str, default=os.path.expandvars("$GOPATH") + "/src/github.com/eniac/zgrab/zgrab")
     parser.add_argument("-p", "--percent", type=float, default=0.01, help="Percentage of available hosts to scan")
     parser.add_argument("-f", "--force", action="store_true", help="Overwrite existing files without asking")
     parser.add_argument("-d", "--directory", default=os.path.expandvars("$PWD"), type=str, help="Directory to write scan files (absolute or relative)")
