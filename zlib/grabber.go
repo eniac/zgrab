@@ -400,6 +400,10 @@ func makeGrabber(config *Config) func(*Conn) error {
 			c.CipherSuites = tls.SafariNoDHECiphers
 			c.ForceSuites = true
 		}
+		if len(config.TLSCipherSuites.Get()) > 0 {
+			c.CipherSuites = config.TLSCipherSuites.Get()
+			c.ForceSuites = true
+		}
 		if config.NoSNI {
 			c.SetNoSNI()
 		}

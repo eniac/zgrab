@@ -15,6 +15,9 @@
 package zlib
 
 import (
+	"encoding/hex"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/zmap/zcrypto/x509"
@@ -57,6 +60,7 @@ type Config struct {
 	// TLS
 	TLS                           bool
 	TLSKexConfig                  string
+	TLSCipherSuites               CipherSuiteList
 	TLSVersion                    uint16
 	Heartbleed                    bool
 	RootCAPool                    *x509.CertPool
@@ -133,4 +137,41 @@ type Config struct {
 
 	// SMB
 	SMB SMBScanConfig
+}
+
+type CipherSuiteList struct {
+	CipherSuites []uint16
+}
+
+func (kList *CipherSuiteList) String() string {
+	var sList []string
+	for _, s := range kList.CipherSuites {
+		sList = append(sList, fmt.Sprintf("%04X", s))
+	}
+
+	return strings.Join(sList, ",")
+}
+
+func (kList *CipherSuiteList) Set(value string) error {
+	for _, kexValue := range strings.Split(value, ",") {
+		if b, err := hex.DecodeString(kexValue); err != nil {
+			return err
+		} else {
+			if len(b) != 2 {
+				return fmt.Errorf("invalid cipher suite id: %v", kexValue)
+			} else {
+				kList.CipherSuites = append(kList.CipherSuites, uint16(b[0])<<8|uint16(b[1]))
+			}
+		}
+	}
+
+	return nil
+}
+
+func (kList *CipherSuiteList) Get() []uint16 {
+	if len(kList.CipherSuites) == 0 {
+		return []uint16{}
+	} else {
+		return kList.CipherSuites
+	}
 }

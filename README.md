@@ -20,7 +20,6 @@ This will install zgrab under `$GOPATH/src/github.com/eniac/zgrab` without tryin
 
 ```
 go get -u github.com/golang/dep/cmd/dep
-go install github.com/golang/dep/cmd/dep
 ```
 
 This will install dep, a go dependency manager, into `$GOPATH/bin/dep`. Dep requires at least go version 1.8. Then:
@@ -30,6 +29,25 @@ $ cd $GOPATH/src/github.com/eniac/zgrab
 $ $GOPATH/bin/dep ensure
 $ go build
 ```
+
+(Optional): If you need to make short-term changes to a package in zgrab, run the following:
+
+```
+rm -r vendor/github.com/zmap/zgrab
+go get github.com/eniac/zgrab
+mkdir -p $GOPATH/src/github.com/zmap
+ln -s $GOPATH/src/github.com/eniac/zgrab $GOPATH/src/github.com/zmap/zgrab
+```
+
+Similarly for zcrypto:
+
+```
+rm -r vendor/github.com/zmap/zcrypto
+go get github.com/eniac/zcrypto
+ln -s $GOPATH/src/github.com/eniac/zcrypto $GOPATH/src/github.com/zmap/zcrypto
+```
+
+Running `dep ensure` again will re-create the dependencies in the `vendor` directory, so do not run that again until you are finished.
 
 ## Usage
 
