@@ -131,28 +131,33 @@ func (cList *CipherList) Get() []string {
 }
 
 type KexValueList struct {
-	KexValues []string
+	KexValues [][]byte
 }
 
 func (kList *KexValueList) String() string {
-	return strings.Join(kList.KexValues, ",")
+	var sList []string
+	for _, s := range kList.KexValues {
+		sList = append(sList, hex.EncodeToString(s))
+	}
+
+	return strings.Join(sList, ",")
 }
 
 func (kList *KexValueList) Set(value string) error {
 	for _, kexValue := range strings.Split(value, ",") {
-		if _, err := hex.DecodeString(kexValue); err != nil {
+		if b, err := hex.DecodeString(kexValue); err != nil {
 			return err
+		} else {
+			kList.KexValues = append(kList.KexValues, b)
 		}
-
-		kList.KexValues = append(kList.KexValues, kexValue)
 	}
 
 	return nil
 }
 
-func (kList *KexValueList) Get() []string {
+func (kList *KexValueList) Get() [][]byte {
 	if len(kList.KexValues) == 0 {
-		return []string{}
+		return [][]byte{}
 	} else {
 		return kList.KexValues
 	}

@@ -223,7 +223,7 @@ func (group *dhGroup) Client(c packetConn, randSource io.Reader, magics *handsha
 	X := new(big.Int).Exp(group.g, x, group.p)
 
 	if len(pkgConfig.KexValues.Get()) == 1 {
-		X, _ = new(big.Int).SetString(pkgConfig.KexValues.Get()[0], 16)
+		X = new(big.Int).SetBytes(pkgConfig.KexValues.Get()[0])
 		x.SetUint64(0)
 	} else if pkgConfig.KexDHMinusOne {
 		X = group.pMinus1
@@ -405,8 +405,8 @@ func (kex *ecdh) Client(c packetConn, rand io.Reader, magics *handshakeMagics) (
 	}
 
 	if len(pkgConfig.KexValues.Get()) == 2 {
-		ephKey.PublicKey.X, _ = new(big.Int).SetString(pkgConfig.KexValues.Get()[0], 16)
-		ephKey.PublicKey.Y, _ = new(big.Int).SetString(pkgConfig.KexValues.Get()[1], 16)
+		ephKey.PublicKey.X = new(big.Int).SetBytes(pkgConfig.KexValues.Get()[0])
+		ephKey.PublicKey.Y = new(big.Int).SetBytes(pkgConfig.KexValues.Get()[1])
 		ephKey.D.SetUint64(0)
 	}
 
@@ -667,14 +667,11 @@ func (kex *curve25519sha256) Client(c packetConn, rand io.Reader, magics *handsh
 	}
 
 	if len(pkgConfig.KexValues.Get()) == 1 {
-		decoded, err := hex.DecodeString(pkgConfig.KexValues.Get()[0])
-		if err != nil {
-			return nil, err
+		kexValue := pkgConfig.KexValues.Get()[0]
+		if len(kexValue) != 32 {
+			return nil, errors.New("xssh: specified curve25519 public value must have length 32 bytes")
 		}
-		if len(decoded) != 32 {
-			return nil, errors.New("ssh: specified curve25519 public value must have length 32 bytes")
-		}
-		copy(kp.pub[:], decoded[:])
+		copy(kp.pub[:], kexValue[:])
 		copy(kp.priv[:], curve25519Zeros[:])
 	}
 
