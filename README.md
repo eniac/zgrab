@@ -30,20 +30,13 @@ $ $GOPATH/bin/dep ensure
 $ go build
 ```
 
-(Optional): If you need to make short-term changes to a package in zgrab, run the following:
+(Optional): If you need to make short-term changes to a package in zgrab or zcrypto, run the following:
 
 ```
-rm -r vendor/github.com/zmap/zgrab
-go get github.com/eniac/zgrab
-mkdir -p $GOPATH/src/github.com/zmap
+rm -r vendor/github.com/zmap/zgrab vendor/github.com/zmap/zcrypto
+go get -d github.com/eniac/zgrab github.com/eniac/zcrypto
+rm -rf $GOPATH/src/github.com/zmap/zgrab $GOPATH/src/github.com/zmap/zcrypto
 ln -s $GOPATH/src/github.com/eniac/zgrab $GOPATH/src/github.com/zmap/zgrab
-```
-
-Similarly for zcrypto:
-
-```
-rm -r vendor/github.com/zmap/zcrypto
-go get github.com/eniac/zcrypto
 ln -s $GOPATH/src/github.com/eniac/zcrypto $GOPATH/src/github.com/zmap/zcrypto
 ```
 
