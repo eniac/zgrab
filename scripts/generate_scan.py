@@ -100,8 +100,9 @@ available_scans = [
                 'probe-module': 'udp',
                 'target-port': '500',
                 },
-            zgrab_common_options=' --ike-version 1 --port 500',
+            zgrab_common_options=' --ike --ike-version 1 --port 500',
             zgrab_scans=[
+                ('FORTIGATE', ' --ike-builtin FORTIGATE'),
                 ('EC2N_155', ' --ike-builtin EC2N_155'),
                 ('EC2N_185', ' --ike-builtin EC2N_185'),
                 ('BASELINE', ' --ike-builtin BASELINE'),
@@ -140,8 +141,9 @@ available_scans = [
                 'probe-module': 'udp',
                 'target-port': '500',
                 },
-            zgrab_common_options=' --ike-version 2 --port 500',
+            zgrab_common_options=' --ike --ike-version 2 --port 500',
             zgrab_scans=[
+                ('FORTIGATE', ' --ike-builtin FORTIGATE'),
                 ('EC2N_155', ' --ike-builtin EC2N_155'),
                 ('EC2N_185', ' --ike-builtin EC2N_155'),
                 ('BASELINE', ' --ike-builtin BASELINE'),
@@ -369,9 +371,9 @@ def main(args):
                 f.write('metadata "{m}"\n'.format(m=os.path.join(zmap_scan_dir, 'zmap.meta.json')))
                 f.write('max-targets {p}%\n'.format(p=args.percent))
                 if 'IKEV1' in scan.name:
-                    f.write('probe-args "file:{p}\n"'.format(p=os.path.join(zmap_scan_dir, 'IKEV1_BASELINE.pkt')))
+                    f.write('probe-args "file:{p}"\n'.format(p=os.path.join(zmap_scan_dir, 'IKEV1_BASELINE.pkt')))
                 if 'IKEV2' in scan.name:
-                    f.write('probe-args "file:{p}\n"'.format(p=os.path.join(zmap_scan_dir, 'IKEV2_BASELINE.pkt')))
+                    f.write('probe-args "file:{p}"\n'.format(p=os.path.join(zmap_scan_dir, 'IKEV2_BASELINE.pkt')))
 
         zmap_scan_script = os.path.join(zmap_scan_dir, 'run.sh')
         zmap_scan_results = os.path.join(zmap_scan_dir, 'results.csv')
