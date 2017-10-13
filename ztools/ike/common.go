@@ -167,7 +167,7 @@ const (
 
 	// Additional Exchanges Defined -- XCHG Values
 	QUICK_MODE_V1     uint8 = 32
-	NEW_GROUP_MODE_V1 uint8 = 32
+	NEW_GROUP_MODE_V1 uint8 = 33
 
 	//  Identification Type Values
 	//  RESERVED                                0
