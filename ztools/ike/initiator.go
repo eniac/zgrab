@@ -655,11 +655,8 @@ func (c *Conn) buildPayloadKeyExchangeV2(config *InitiatorConfig) (p *payloadKey
 
 func (c *Conn) buildPayloadNonce(config *InitiatorConfig) (p *payloadNonce) {
 	p = new(payloadNonce)
-	// 48-byte nonce
-	p.nonceData = append(p.nonceData, []byte("d3a261126ee5367a480154a1a1a3")...)
-	p.nonceData = append(p.nonceData, []byte("f86ddd9e9c271cca03b413b8762c3648")...)
-	p.nonceData = append(p.nonceData, []byte("f86ddd9e9c271cca03b413b8762c3648")...)
-	p.nonceData = append(p.nonceData, []byte("9bc9")...)
+	// 20-byte nonce
+	p.nonceData = append(p.nonceData, []byte("\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13")...)
 	return
 }
 
@@ -677,6 +674,28 @@ func (c *Conn) buildPayloadVendorId(config *InitiatorConfig) (p *payloadVendorId
 
 func uint16ToBytes(num uint16) []byte {
 	return []byte{uint8(num >> 8), uint8(num)}
+}
+
+func (c *InitiatorConfig) MakeOPENBSD() {
+	if c.Version == VersionIKEv1 {
+		panic("not implemented")
+	} else {
+		c.Proposals = []Proposal{
+			{ProposalNum: 1, Transforms: []Transform{
+				{Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []Attribute{{Type: KEY_LENGTH_V2, Value: uint16ToBytes(256)}}},
+				{Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_AES_CBC_V2, Attributes: []Attribute{{Type: KEY_LENGTH_V2, Value: uint16ToBytes(128)}}},
+				{Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_3DES_V2},
+				{Type: ENCRYPTION_ALGORITHM_V2, Id: ENCR_DES_V2},
+				{Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_SHA1_V2},
+				{Type: PSEUDORANDOM_FUNCTION_V2, Id: PRF_HMAC_MD5_V2},
+				{Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_SHA1_96_V2},
+				{Type: INTEGRITY_ALGORITHM_V2, Id: AUTH_HMAC_MD5_96_V2},
+				{Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_EC2N_GP_155_V1},
+				{Type: DIFFIE_HELLMAN_GROUP_V2, Id: DH_EC2N_GP_185_V1},
+			},
+			},
+		}
+	}
 }
 
 func (c *InitiatorConfig) MakeBASELINE() {
@@ -1333,6 +1352,14 @@ func (c *InitiatorConfig) SetConfig() error {
 	configString := strings.ToUpper(pkgConfig.BuiltIn)
 	switch configString {
 	case "": // do not use a built-in config
+		if len(c.Proposals) < 1 {
+			zlog.Fatalf("No proposals specified: use ike-builtin or ike-proposals to specify a proposal")
+		}
+	case "OPENBSD":
+		//c.DHGroup = DH_1024_V1
+		//c.DHGroup = DH_EC2N_GP_155_V1
+		c.DHGroup = DH_EC2N_GP_185_V1
+		c.MakeOPENBSD()
 	case "BASELINE":
 		c.DHGroup = DH_1024_V1
 		c.MakeBASELINE()

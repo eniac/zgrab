@@ -143,6 +143,7 @@ available_scans = [
                 },
             zgrab_common_options=' --ike --ike-version 2 --port 500',
             zgrab_scans=[
+                ('OPENBSD', ' --ike-builtin OPENBSD'),
                 ('FORTIGATE', ' --ike-builtin FORTIGATE'),
                 ('EC2N_155', ' --ike-builtin EC2N_155'),
                 ('EC2N_185', ' --ike-builtin EC2N_155'),
