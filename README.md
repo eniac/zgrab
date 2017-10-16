@@ -8,7 +8,7 @@ A Banner Grabber, in Go
 
 ## Building (updated for eniac fork)
 
-You will need to have a valid `$GOPATH` set up. For more information about `$GOPATH`, see https://golang.org/doc/code.html.
+You will need to have a valid `$GOPATH` set up. For more information about `$GOPATH`, see https://golang.org/doc/code.html. You will also need go version 1.8 or later (required for Dep), which you can download at https://golang.org/dl/.
 
 Once you have a working `$GOPATH`, run:
 
