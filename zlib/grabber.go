@@ -296,8 +296,6 @@ func makeHTTPGrabber(config *Config, grabData *GrabData) func(string, string, st
 			fullURL = "http://" + urlHost + endpoint
 		}
 
-		var resp *http.Response
-
 		u, err := url.Parse(fullURL)
 		if err != nil {
 			return err
@@ -316,13 +314,20 @@ func makeHTTPGrabber(config *Config, grabData *GrabData) func(string, string, st
 			httpHost = hostWithoutPort
 		}
 
+		var req *http.Request
+		var resp *http.Response
+
 		switch config.HTTP.Method {
 		case "GET":
-			resp, err = client.GetWithHost(fullURL, httpHost)
+			req, err = http.NewRequestWithHost("GET", fullURL, httpHost, nil)
 		case "HEAD":
-			resp, err = client.HeadWithHost(fullURL, httpHost)
+			req, err = http.NewRequestWithHost("HEAD", fullURL, httpHost, nil)
 		default:
 			zlog.Fatalf("Bad HTTP Method: %s. Valid options are: GET, HEAD.", config.HTTP.Method)
+		}
+		if err == nil {
+			req.Header.Set("Accept", "*/*")
+			resp, err = client.Do(req)
 		}
 		if resp != nil && resp.Body != nil {
 			defer resp.Body.Close()
@@ -425,9 +430,11 @@ func makeGrabber(config *Config) func(*Conn) error {
 		if config.TLSVerbose {
 			c.SetTLSVerbose()
 		}
-
 		if config.TLSKexConfig != "" {
 			c.TLSKexConfig = config.TLSKexConfig
+		}
+		if config.TLSCertsOnly {
+			c.SetTLSCertsOnly()
 		}
 		if config.TLS {
 			if err := c.TLSHandshake(); err != nil {
@@ -646,6 +653,18 @@ func makeIKEGrabber(gblConfig *Config, grabData GrabData) func(string) error {
 }
 
 func GrabBanner(config *Config, target *GrabTarget) *Grab {
+	defer func() {
+		if e := recover(); e != nil {
+			addr := "<not set>"
+			if target.Addr != nil {
+				addr = target.Addr.String()
+			}
+			config.ErrorLog.Errorf("Panic when scanning addr = %s / domain = %s, port %d", addr, target.Domain, config.Port)
+			// Bubble out original error (with original stack) in lieu of explicitly logging the stack / error
+			panic(e)
+		}
+	}()
+
 	if config.XSSH.XSSH {
 		t := time.Now()
 
@@ -684,7 +703,12 @@ func GrabBanner(config *Config, target *GrabTarget) *Grab {
 		dial := makeDialer(config)
 		grabber := makeGrabber(config)
 		port := strconv.FormatUint(uint64(config.Port), 10)
-		addr := target.Addr.String()
+		var addr string
+		if config.LookupDomain {
+			addr = target.Domain
+		} else {
+			addr = target.Addr.String()
+		}
 		rhost := net.JoinHostPort(addr, port)
 		t := time.Now()
 		conn, dialErr := dial(rhost)

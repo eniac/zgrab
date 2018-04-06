@@ -273,6 +273,7 @@ zgrab_tls = SubRecord({
                 "length":Integer(),
            }),
         }),
+        "digest": Binary(),
         "signature":SubRecord({
             "raw":Binary(),
             "type":String(),
@@ -690,6 +691,7 @@ xssh_signature = SubRecord({
         "value":Binary(),
     }),
     "raw":Binary(),
+    "h":Binary(),
 })
 
 golang_crypto_param = SubRecord({

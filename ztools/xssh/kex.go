@@ -17,7 +17,7 @@ import (
 	"io"
 	"math/big"
 
-	ztoolsKeys "github.com/zmap/zgrab/ztools/keys"
+	zcryptoJSON "github.com/zmap/zcrypto/json"
 
 	"golang.org/x/crypto/curve25519"
 )
@@ -165,7 +165,7 @@ type dhGroup struct {
 	JsonLog       dhGroupJsonLog
 }
 type dhGroupJsonLog struct {
-	Parameters      *ztoolsKeys.DHParams  `json:"dh_params,omitempty"`
+	Parameters      *zcryptoJSON.DHParams  `json:"dh_params,omitempty"`
 	ServerSignature *JsonSignature        `json:"server_signature,omitempty"`
 	ServerHostKey   *ServerHostKeyJsonLog `json:"server_host_key,omitempty"`
 }
@@ -206,7 +206,7 @@ func (group *dhGroup) diffieHellman(theirPublic, myPrivate *big.Int) (*big.Int, 
 }
 
 func (group *dhGroup) Client(c packetConn, randSource io.Reader, magics *handshakeMagics) (*kexResult, error) {
-	group.JsonLog.Parameters = new(ztoolsKeys.DHParams)
+	group.JsonLog.Parameters = new(zcryptoJSON.DHParams)
 	hashFunc := crypto.SHA1
 
 	var x *big.Int
@@ -276,9 +276,11 @@ func (group *dhGroup) Client(c packetConn, randSource io.Reader, magics *handsha
 	K := make([]byte, intLength(kInt))
 	marshalInt(K, kInt)
 	h.Write(K)
+	H := h.Sum(nil)
+	group.JsonLog.ServerSignature.H = H
 
 	return &kexResult{
-		H:         h.Sum(nil),
+		H:         H,
 		K:         K,
 		HostKey:   kexDHReply.HostKey,
 		Signature: kexDHReply.Signature,
@@ -359,7 +361,7 @@ type ecdh struct {
 }
 
 type ecdhJsonLog struct {
-	Parameters      *ztoolsKeys.ECDHParams `json:"ecdh_params,omitempty"`
+	Parameters      *zcryptoJSON.ECDHParams `json:"ecdh_params,omitempty"`
 	ServerSignature *JsonSignature         `json:"server_signature,omitempty"`
 	ServerHostKey   *ServerHostKeyJsonLog  `json:"server_host_key,omitempty"`
 }
@@ -392,11 +394,11 @@ func (kex *ecdh) GetNew(keyType string) kexAlgorithm {
 }
 
 func (kex *ecdh) Client(c packetConn, rand io.Reader, magics *handshakeMagics) (*kexResult, error) {
-	kex.JsonLog.Parameters = new(ztoolsKeys.ECDHParams)
-	kex.JsonLog.Parameters.ServerPublic = new(ztoolsKeys.ECPoint)
+	kex.JsonLog.Parameters = new(zcryptoJSON.ECDHParams)
+	kex.JsonLog.Parameters.ServerPublic = new(zcryptoJSON.ECPoint)
 	if pkgConfig.Verbose {
-		kex.JsonLog.Parameters.ClientPublic = new(ztoolsKeys.ECPoint)
-		kex.JsonLog.Parameters.ClientPrivate = new(ztoolsKeys.ECDHPrivateParams)
+		kex.JsonLog.Parameters.ClientPublic = new(zcryptoJSON.ECPoint)
+		kex.JsonLog.Parameters.ClientPrivate = new(zcryptoJSON.ECDHPrivateParams)
 	}
 
 	ephKey, err := ecdsa.GenerateKey(kex.curve, rand)
@@ -463,9 +465,11 @@ func (kex *ecdh) Client(c packetConn, rand io.Reader, magics *handshakeMagics) (
 	K := make([]byte, intLength(secret))
 	marshalInt(K, secret)
 	h.Write(K)
+	H := h.Sum(nil)
+	kex.JsonLog.ServerSignature.H = H
 
 	return &kexResult{
-		H:         h.Sum(nil),
+		H:         H,
 		K:         K,
 		HostKey:   reply.HostKey,
 		Signature: reply.Signature,
@@ -724,9 +728,11 @@ func (kex *curve25519sha256) Client(c packetConn, rand io.Reader, magics *handsh
 	K := make([]byte, intLength(kInt))
 	marshalInt(K, kInt)
 	h.Write(K)
+	H := h.Sum(nil)
+	kex.JsonLog.ServerSignature.H = H
 
 	return &kexResult{
-		H:         h.Sum(nil),
+		H:         H,
 		K:         K,
 		HostKey:   reply.HostKey,
 		Signature: reply.Signature,

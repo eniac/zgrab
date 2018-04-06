@@ -74,6 +74,7 @@ type Conn struct {
 	gatherSessionTicket           bool
 	offerExtendedMasterSecret     bool
 	tlsVerbose                    bool
+	tlsCertsOnly                  bool
 	SignedCertificateTimestampExt bool
 
 	domain string
@@ -123,6 +124,10 @@ func (c *Conn) SetSignedCertificateTimestampExt() {
 
 func (c *Conn) SetTLSVerbose() {
 	c.tlsVerbose = true
+}
+
+func (c *Conn) SetTLSCertsOnly() {
+	c.tlsCertsOnly = true
 }
 
 // Layer in the regular conn methods
@@ -291,6 +296,7 @@ func (c *Conn) TLSHandshake() error {
 			c.RemoteAddr().String())
 	}
 	tlsConfig := new(tls.Config)
+	tlsConfig.CertsOnly = c.tlsCertsOnly
 	tlsConfig.InsecureSkipVerify = true
 	tlsConfig.MinVersion = tls.VersionSSL30
 	tlsConfig.MaxVersion = c.maxTlsVersion
@@ -325,6 +331,9 @@ func (c *Conn) TLSHandshake() error {
 	c.isTls = true
 	err := c.tlsConn.Handshake()
 	if tlsConfig.ForceSuites && err == tls.ErrUnimplementedCipher {
+		err = nil
+	}
+	if err == tls.ErrCertsOnly {
 		err = nil
 	}
 	hl := c.tlsConn.GetHandshakeLog()
