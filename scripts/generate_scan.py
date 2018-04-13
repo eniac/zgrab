@@ -14,10 +14,10 @@ class Config:
         self.zgrab_scans=zgrab_scans
 
 # NIST-P224 generator of subgroup of order 11 on twist
-P224_TWIST_S11 = "{:02x},{:02x}".format(21219928721835262216070635629075256199931199995500865785214182108232, 
+P224_TWIST_S11 = "{:02x},{:02x}".format(21219928721835262216070635629075256199931199995500865785214182108232,
         2486431965114139990348241493232938533843075669604960787364227498903)
 # NIST-P224 generator of subgroup of order 13 on curve w/ B-1
-P224_INVALID_S13 = "{:02x},{:02x}".format(1234919426772886915432358412587735557527373236174597031415308881584, 
+P224_INVALID_S13 = "{:02x},{:02x}".format(1234919426772886915432358412587735557527373236174597031415308881584,
         218592750580712164156183367176268299828628545379017213517316023994)
 # NIST-P256 generator of subgroup of order 5 on twist y^2 = x^3 +
 # 64540953657701435357043644561909631465859193840763101878720769919119982834454*x
@@ -73,7 +73,7 @@ zgrab_tls_cipher_suite_scans = [
         ]
 
 available_scans = [
-        Config(name='SSH-22', 
+        Config(name='SSH-22',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '22',
@@ -178,7 +178,7 @@ available_scans = [
                 ('CURVE25519', ' --ike-builtin CURVE25519'), # not yet standardized: https://tools.ietf.org/html/draft-ietf-ipsecme-safecurves-05#section-2
                 ]
             ),
-        Config(name='STARTTLS-25', 
+        Config(name='STARTTLS-25',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '25',
@@ -186,7 +186,7 @@ available_scans = [
             zgrab_common_options=' --starttls --port 25 --smtp --ehlo "research-scan.cis.upenn.edu" --timeout 30 --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-110', 
+        Config(name='TLS-110',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '110',
@@ -194,7 +194,7 @@ available_scans = [
             zgrab_common_options=' --starttls --port 110 --pop3 --timeout 30 --tls-verbose --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-143', 
+        Config(name='TLS-143',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '143',
@@ -202,29 +202,30 @@ available_scans = [
             zgrab_common_options=' --starttls --port 143 --imap --timeout 30 --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-443', 
+        Config(name='TLS-443',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '443',
                 },
             zgrab_common_options=' --tls --port 443 --tls-verbose',
-            zgrab_scans = zgrab_tls_cipher_suite_scans
-#               zgrab_tls_common_scans + [
-#                ('ECDH_ANDROID', ' --ecdhe-ciphers --curve-preferences 14,13,25,11,12,24,9,10,22,23,8,6,7,20,21,4,5,18,19,1,2,3,15,16,17'),
-#                ('160K1_ECP_DOUBLE', ' --ecdhe-ciphers --curve-preferences 15'),
-#                ('160R1_ECP_DOUBLE', ' --ecdhe-ciphers --curve-preferences 16'),
-#                ('256_ECP_INVALID_S5_DOUBLE', ' --ecdhe-ciphers --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-#                ('X25519_DOUBLE', ' --ecdhe-ciphers --curve-preferences 29'),
-#                ('X25519_INVALID_S8', ' --ecdhe-ciphers --curve-preferences 29 --tls-kex-config X25519_INVALID_S8'),
-#                ('X448', ' --ecdhe-ciphers --curve-preferences 30'),
-#                ('256_ECP_TWIST_S5_COMPRESS', ' --ecdhe-ciphers --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5,COMPRESS'),
-#                ('256_ECP_TWIST_S5', '  --ecdhe-ciphers --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
-#                ('256_ECP_INVALID_S5', ' --ecdhe-ciphers --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
-#                ('EXPLICIT_PRIME_CURVE', ' --ecdhe-ciphers --curve-preferences 65281'),
-#                ('EXPLICIT_CHAR2_CURVE', ' --ecdhe-ciphers --curve-preferences 65282'),
-#                ]
+            zgrab_scans =
+#            zgrab_tls_cipher_suite_scans
+               zgrab_tls_common_scans + [
+                ('ECDH_ANDROID', ' --ecdhe-ciphers --curve-preferences 14,13,25,11,12,24,9,10,22,23,8,6,7,20,21,4,5,18,19,1,2,3,15,16,17'),
+                ('160K1_ECP_DOUBLE', ' --ecdhe-ciphers --curve-preferences 15'),
+                ('160R1_ECP_DOUBLE', ' --ecdhe-ciphers --curve-preferences 16'),
+                ('256_ECP_INVALID_S5_DOUBLE', ' --ecdhe-ciphers --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+                ('X25519_DOUBLE', ' --ecdhe-ciphers --curve-preferences 29'),
+                ('X25519_INVALID_S8', ' --ecdhe-ciphers --curve-preferences 29 --tls-kex-config X25519_INVALID_S8'),
+                ('X448', ' --ecdhe-ciphers --curve-preferences 30'),
+                ('256_ECP_TWIST_S5_COMPRESS', ' --ecdhe-ciphers --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5,COMPRESS'),
+                ('256_ECP_TWIST_S5', '  --ecdhe-ciphers --curve-preferences 23 --tls-kex-config 256_ECP_TWIST_S5'),
+                ('256_ECP_INVALID_S5', ' --ecdhe-ciphers --curve-preferences 23 --tls-kex-config 256_ECP_INVALID_S5'),
+                ('EXPLICIT_PRIME_CURVE', ' --ecdhe-ciphers --curve-preferences 65281'),
+                ('EXPLICIT_CHAR2_CURVE', ' --ecdhe-ciphers --curve-preferences 65282'),
+                ]
             ),
-        Config(name='TLS-465', 
+        Config(name='TLS-465',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '465',
@@ -232,7 +233,7 @@ available_scans = [
             zgrab_common_options=' --tls --port 465 --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-563', 
+        Config(name='TLS-563',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '563',
@@ -240,7 +241,7 @@ available_scans = [
             zgrab_common_options=' --tls --port 563 --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-587', 
+        Config(name='TLS-587',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '587',
@@ -248,7 +249,7 @@ available_scans = [
             zgrab_common_options=' --starttls --port 587 --smtp --ehlo "research-scan.cis.upenn.edu" --timeout 30 --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-636', 
+        Config(name='TLS-636',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '636',
@@ -256,7 +257,7 @@ available_scans = [
             zgrab_common_options=' --tls --port 636 --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-853', 
+        Config(name='TLS-853',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '853',
@@ -264,7 +265,7 @@ available_scans = [
             zgrab_common_options=' --tls --port 853 --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-989', 
+        Config(name='TLS-989',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '989',
@@ -272,7 +273,7 @@ available_scans = [
             zgrab_common_options=' --tls --port 989 --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-990', 
+        Config(name='TLS-990',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '990',
@@ -280,7 +281,7 @@ available_scans = [
             zgrab_common_options=' --tls --port 990 --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-992', 
+        Config(name='TLS-992',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '992',
@@ -288,7 +289,7 @@ available_scans = [
             zgrab_common_options=' --tls --port 992 --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-993', 
+        Config(name='TLS-993',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '993',
@@ -296,7 +297,7 @@ available_scans = [
             zgrab_common_options=' --tls --port 993 --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-994', 
+        Config(name='TLS-994',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '994',
@@ -304,7 +305,7 @@ available_scans = [
             zgrab_common_options=' --tls --port 994 --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-995', 
+        Config(name='TLS-995',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '995',
@@ -312,7 +313,7 @@ available_scans = [
             zgrab_common_options=' --tls --port 995 --tls-verbose',
             zgrab_scans=zgrab_tls_common_scans,
             ),
-        Config(name='TLS-8443', 
+        Config(name='TLS-8443',
             zmap_options={
                 'probe-module': 'tcp_synscan',
                 'target-port': '8443',
@@ -331,7 +332,7 @@ def generate_zgrab_command(executable, scan_options, common_options, global_opti
             ' --metadata-file "{p}.meta"'
             ' --log-file "{p}.log"'
             ' --output-file "{p}.banners"').format(
-                    e=args.executable, 
+                    e=args.executable,
                     s=scan_options,
                     c=common_options,
                     g=zgrab_global_options,
@@ -384,7 +385,7 @@ def main(args):
                     f.write('echo 127.0.0.1 | {e} --ike --ike-version 1 --ike-probe-file {p} --ike-builtin BASELINE\n'.format(e=args.executable, p=os.path.join(zmap_scan_dir, 'IKEV1_BASELINE.pkt')))
                 if 'IKEV2' in scan.name:
                     f.write('echo 127.0.0.1 | {e} --ike --ike-version 2 --ike-probe-file {p} --ike-builtin BASELINE\n'.format(e=args.executable, p=os.path.join(zmap_scan_dir, 'IKEV2_BASELINE.pkt')))
-                f.write('zmap -C {c}'.format(c=zmap_scan_conf)) 
+                f.write('zmap -C {c}'.format(c=zmap_scan_conf))
                 f.write(' | ztee {r} --success-only > /dev/null\n'.format(r=zmap_scan_results))
             run_script.write('bash {s}\n'.format(s=zmap_scan_script))
 
